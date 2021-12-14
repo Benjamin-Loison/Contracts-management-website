@@ -1,0 +1,482 @@
+{% include 'menu.html.twig' %}
+
+<title>{{ dashboard|capitalize }}</title>
+
+<style>
+
+	.widget
+	{
+		color: white;
+		border-radius: 5%;
+		margin-left: 2%;
+		white-space: nowrap;
+		padding-right: 3%;
+	}
+
+	.indent
+	{
+		margin-left: 10%;
+	}
+
+	.indentBoth
+	{
+		margin-left: 3.8%;
+		margin-right: 3.8%;
+	}
+
+	nav ul
+	{
+		height: 65%;
+		overflow-y: auto;
+	}
+
+	.button
+    {
+    	background-color: #409EFE;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+</style>
+
+<script>
+
+	var initialized = [];
+
+	function upload()
+	{
+		document.getElementById("uploadButton").click();
+	}
+
+	function widget(html, id)
+	{
+		if(html == undefined) html = '';
+		var els = [], beginYear = 3000, endYear = 1000;
+		if(html != "")
+		{
+			var parts = html.split("\n"), partsLength = parts.length;
+			if(id == 'Amount')
+			{
+				var dict = [], newParts = [], fullDict = [];
+				for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+				{
+					var part = parts[partsIndex], partParts = part.split("|"), year = partParts[0].split('_')[0], contractNumber = parseInt(partParts[1]), contractAmount = parseInt(partParts[2]);
+					fullDict[partParts[0]] = [partParts[1], parseInt(partParts[2])];
+					if(year in dict)
+					{
+						var dictValue = dict[year], dictValueParts = dictValue.split('|'), dictValueContractNumber = parseInt(dictValueParts[0]), dictValueContractAmount = parseInt(dictValueParts[1]);
+						dict[year] = '1|' + (dictValueContractAmount > contractAmount ? dictValueContractAmount : contractAmount);
+						var yearInt = parseInt(year);
+						if(yearInt > endYear)
+							endYear = yearInt;
+						if(yearInt < beginYear)
+							beginYear = yearInt;
+					}
+					else
+						dict[year] = partParts[1] + '|' + partParts[2];
+				}
+				for(var year in dict)
+				{
+					newParts.push(year + '|' + dict[year]);
+				}
+				parts = newParts;
+				partsLength = newParts.length;
+			}
+			for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+			{
+				var part = parts[partsIndex], partParts = part.split("|");
+				els.push([partParts[0], parseInt(partParts[1]), parseFloat(partParts[2])]);
+			}
+		}
+
+		var elsLength = els.length, canvas = document.getElementById("contractsPer" + id);
+		if(canvas == null) return;
+		var ctx = canvas.getContext("2d"),
+			widget = document.getElementById("widgetContractsPer" + id),
+			titleBottom = document.getElementById('titleContractsPer' + id).getBoundingClientRect().bottom, widgetBottom = widget.getBoundingClientRect().bottom;
+		var isInitialized = initialized.includes(id);
+		if(!isInitialized)
+		{
+			initialized.push(id);
+		}
+		else
+		{
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+		}
+		var canvasWidth = isInitialized ? canvas.width : widget.offsetWidth, canvasHeight = isInitialized && id != 'Amount' ? canvas.height : Math.floor(widgetBottom - titleBottom) - 40;
+		var fontHeight = 30, barWidth = 50, axisPrecision = 5;
+		if(!isInitialized)
+		{
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
+			if(id == 'Amount')
+            {
+                canvasWidth -= 300;
+            }
+		}
+		else if(id == 'Amount')
+		{
+			canvas.height = canvasHeight;
+		}
+		canvasHeight -= fontHeight;
+		ctx.lineWidth = 5;
+
+        var maxAmount = 1, totalUnitsCount = 0, totalUnitsIndex = 0;
+        for(var elsIndex = 0; elsIndex < elsLength; elsIndex++)
+        {
+            var el = els[elsIndex], elContracts = el[1], elAmount = el[2];
+            if(elAmount > maxAmount) maxAmount = elAmount;
+            if(elContracts > 0) totalUnitsCount++;
+        }
+		
+		var cleanMaxAmount = Number(maxAmount.toPrecision(2)), amountStep = cleanMaxAmount / axisPrecision;
+		barWidth = canvasWidth / (2 * totalUnitsCount + 1);
+
+		ctx.strokeStyle = "#0B83FF";
+		var maxFontHeight = canvasHeight / (1.25 * axisPrecision) - 2 * ctx.lineWidth;
+
+		function withSpaces(nb)
+		{
+			var res = nb.toLocaleString('en').replaceAll(',', ' ');
+			return res;
+		}
+
+		function precisionDraw(text = false)
+		{
+			if(text)
+			{
+				ctx.textAlign = 'start';//'center';
+        		ctx.textBaseline = 'alphabetic';//'top';
+				ctx.fillStyle = '#000000';
+			}
+			else
+			{
+				ctx.beginPath();
+				ctx.strokeStyle = '#0B83FF';
+			}
+			for(var precisionIndex = 0; precisionIndex < axisPrecision; precisionIndex++)
+        	{
+            	var y = canvasHeight * (precisionIndex + 1) / (axisPrecision + 1);
+            	if(!text)
+				{
+					ctx.moveTo(ctx.lineWidth, y);
+            		ctx.lineTo(canvasWidth, y);
+            		ctx.stroke();
+            	}
+				else
+				{
+					var amountToDisplay = withSpaces(amountStep * (axisPrecision - precisionIndex)) + " {{ moneySymbol }}";
+            		setHighestFontForMaxWidth(amountToDisplay, canvasWidth/* / (2 * totalUnitsCount + 1)*/, maxFontHeight / 1.25);
+            		ctx.fillText(amountToDisplay, ctx.lineWidth, y - ctx.lineWidth);
+				}
+        	}
+			if(!text)
+			{
+				ctx.closePath();
+			}
+		}
+
+		precisionDraw();
+
+		function ToolTip(canvas, region, text)
+		{
+			var me = this,
+      			div = document.createElement("div"),
+      			parent = canvas.parentNode,
+      			visible = false;
+  
+  			div.style.cssText = "position: fixed; padding: 7px; background: grey; pointer-events: none; font-weight: bold;";
+  			div.innerHTML = text;
+  
+  			this.show = function(pos)
+			{
+    			if(!visible)
+				{
+      				visible = true;
+      				parent.appendChild(div);
+					setDivPos(pos);
+    			}
+  			}
+  
+  			function hide()
+			{
+    			visible = false;
+    			parent.removeChild(div);
+  			}
+
+			function isIn(pos)
+			{
+				return pos.x >= region.x && pos.x < region.x + region.w &&
+                       pos.y >= region.y && pos.y < region.y + region.h;
+			}
+
+  			function check(e)
+			{
+    			var pos = getPos(e), posAbs = {x: e.clientX, y: e.clientY};
+    			if(!visible && isIn(pos))
+      				me.show(posAbs);
+				else if(visible && !isIn(pos))
+					hide();
+    			else
+					setDivPos(posAbs);
+  			}
+  
+  			function getPos(e)
+			{
+    			var r = canvas.getBoundingClientRect();
+    			return {x: e.clientX - r.left, y: e.clientY - r.top}
+			}
+  
+  			function setDivPos(pos)
+			{
+    			if(visible)
+				{	
+      				div.style.left = pos.x + "px";
+      				div.style.top = (pos.y - div.offsetHeight) + "px";
+    			}
+  			}
+ 
+  			document.addEventListener("mousemove", check);
+		}
+
+		ctx.font = fontHeight + "px Arial";
+		ctx.textAlign = "center";
+		ctx.textBaseline = "top";
+
+		function setHighestFontForMaxWidth(text, maxWidth, maxFontHeight = 5000)
+		{
+			var ftHeight = 1;
+			ctx.font = ftHeight + "px Arial";
+			while(ctx.measureText(text).width < maxWidth && ftHeight < maxFontHeight)
+			{
+				ftHeight++;
+				ctx.font = "bold " + ftHeight + "px Arial";
+			}
+			ftHeight--;
+			ctx.font = "bold " + ftHeight + "px Arial";
+			return ftHeight;
+		}
+
+		// if add more units, should add more colors
+		var colors = ['FE2712', 'A7194B', '8601AF', '3D01A4', '0247FE', '0391CE', '66B032', 'D0EA2B', 'FEFE33', 'FABC02', 'FB9902', 'FD5308'], yearsX = [];
+		for(var elsIndex = 0; elsIndex < elsLength; elsIndex++)
+		{
+			var el = els[elsIndex], elName = el[0], elContracts = el[1], elAmount = el[2], ftH = setHighestFontForMaxWidth(elName, canvasWidth / (totalUnitsCount + 1), 31);
+
+			if(elContracts > 0)
+			{
+				var xT = canvasWidth * (1 + totalUnitsIndex) / (totalUnitsCount + 1);
+				ctx.fillStyle = "#D7D6E2";
+				var offset = canvasHeight * elAmount / maxAmount;
+				yearsX[elName] = xT;
+				if(id != 'Amount')
+					ctx.fillRect(xT - barWidth / 2, canvasHeight - ctx.lineWidth / 2, barWidth, -offset);
+				ctx.fillStyle = "#000000";
+				//if(ftH > 10)
+					ctx.fillText(elName, xT, canvasHeight + ctx.lineWidth);
+				
+				var elContractsWithSpaces = withSpaces(elContracts),
+					elAmountWithSpaces = withSpaces(elAmount);
+
+				if(offset > 10 && id != 'Amount')
+				{
+					setHighestFontForMaxWidth(elContractsWithSpaces, barWidth, Math.min(offset, 40));
+					ctx.fillText(elContractsWithSpaces, xT, canvasHeight - 0.9 * offset);
+				}
+				
+				if(id != 'Amount')
+				{
+					var region = {x: xT - barWidth / 2, y: canvasHeight - ctx.lineWidth / 2 - offset, w: barWidth, h: offset};
+        			new ToolTip(canvas, region, elName + " - " + elAmountWithSpaces + " {{ moneySymbol }} (" + elContractsWithSpaces + " " + (elContracts > 1 ? "{{ contracts }}" : "{{ contract }}") + ")");
+				}
+				totalUnitsIndex++;
+			}
+		}
+		if(id == 'Amount')
+            {
+                if(html != "")
+                {
+                    var parts = html.split("\n"), partsLength = parts.length, dict = [];
+                    for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                    {
+                        var part = parts[partsIndex], partParts = part.split('|'), partPartsParts = partParts[0].split('_'), year = partPartsParts[0], unit = partPartsParts[1];
+                        dict[unit] = partParts[1] + '|' + partParts[2];
+                    }
+                    ctx.textAlign = "right";
+					var unitIndex = 0, dictLength = Object.keys(dict).length, fontSize = canvasHeight / dictLength;
+        			offset = canvasHeight / dictLength;
+                    for(var unit in dict)
+                    {
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#' + colors[unitIndex];
+                        ctx.fillStyle = '#' + colors[unitIndex];
+						ctx.font = "bold 20px Arial";
+                        for(var year = beginYear; year < endYear/* - 1*/; year++)
+                        {
+                            var yearKey = year + '_' + unit, yearData = yearKey in fullDict ? fullDict[yearKey] : [0, 0], yearNumber = yearData[0], yearAmount = yearData[1], nextYearKey = (year + 1) + '_' + unit, nextYearAmount = nextYearKey in fullDict ? fullDict[nextYearKey][1] : 0;
+                            if(yearAmount == 0 && nextYearAmount == 0) continue;
+                            var yearY = canvasHeight * yearAmount / maxAmount, nextYearY = canvasHeight * nextYearAmount / maxAmount;
+                            ctx.moveTo(yearsX[year], canvasHeight - yearY);
+                            ctx.lineTo(yearsX[year + 1], canvasHeight - nextYearY);
+                        }
+                        ctx.stroke();
+                        ctx.closePath();
+                        for(var year = beginYear; year <= endYear; year++)
+                        {
+                            var yearKey = year + '_' + unit, yearData = yearKey in fullDict ? fullDict[yearKey] : [0, 0], yearNumber = yearData[0], yearAmount = yearData[1], yearY = canvasHeight * yearAmount / maxAmount;
+                            if(yearNumber != 0 && yearY > 20)
+                            {
+							    ctx.fillText(yearNumber, yearsX[year], canvasHeight - yearY + 5);
+							}
+                        }
+						setHighestFontForMaxWidth(unit, 200, Math.min(offset, 40));
+						ctx.fillText(unit, canvasWidth + 200, canvasHeight - 30 - fontSize * unitIndex);
+                        unitIndex++;
+                    }
+                }
+            }
+
+		precisionDraw(true);
+
+		ctx.beginPath();
+		ctx.strokeStyle = "#FFFFFF";
+        ctx.moveTo(canvasWidth, canvasHeight);
+        ctx.lineTo(0, canvasHeight);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+		ctx.closePath();
+	}
+	
+	var htmlGlobalYear, htmlGlobalDirection, htmlGlobalAmount;
+	
+	function allWidgets()
+	{
+		widget(htmlGlobalYear, "Year");
+		widget(htmlGlobalDirection, "Direction");
+		widget(htmlGlobalAmount, "Amount");
+	}
+
+	function getContractsPerYearURL()
+	{
+		var unitId = document.getElementById('unit').value, supplierId = document.getElementById('supplier').value, url = "/contractsPerYear/" + unitId + '/' + supplierId
+		return url;
+	}
+
+	function updateSort()
+	{
+		fetch(getContractsPerYearURL()).then(function(responseYear)
+        {
+            return responseYear.text();
+        }).then(function(htmlYear)
+        {
+            htmlGlobalYear = htmlYear;
+            widget(htmlGlobalYear, "Year");
+		});
+	}
+	
+	window.addEventListener("load", function() {
+		fetch("/contractsPerDirection").then(function(responseDirection) // let request the server in order to only have required data etc
+		{
+			return responseDirection.text();
+		}).then(function(htmlDirection)
+		{
+			fetch(getContractsPerYearURL()).then(function(responseYear)
+			{
+				return responseYear.text();
+			}).then(function(htmlYear)
+			{
+				fetch("/contractsPerAmount").then(function(responseAmount)
+				{
+					return responseAmount.text();
+				}).then(function(htmlAmount)
+				{
+					htmlGlobalYear = htmlYear;
+					htmlGlobalDirection = htmlDirection;
+					htmlGlobalAmount = htmlAmount;
+					allWidgets();
+				});
+			});
+		});
+	});
+
+	window.addEventListener('resize', allWidgets);
+
+</script>
+
+<h1 class="title">{{ dashboard|capitalize }}</h1>
+
+<div style="display: flex; max-height: 75%;"><!-- 55 -->
+	<div class="widget" style="background: #0F97BC; min-width: 300px; ">
+		<img src="res/contract.svg" style="width: 100px; height: 112px; margin-top: 5%; margin-right: 5%; float: right;">
+		<!--<h1 class="indent">{{ contracts_count }}</h1>-->
+		<h1 class="indent">{{ contracts|capitalize }}</h1>
+		<h1 class="indent">{{ contracts_count }}</h1>
+		<!--<h2 class="indent">{{ contracts|capitalize }}</h2>--><!--h3-->
+	</div>
+
+	<div class="widget" style="background: #219347;">
+		<h1 class="indentBoth">{{ contracts_to_renew_in_next_6_months|capitalize }}</h1>
+		<nav class="indentBoth">
+			<ul style="font-size: large; font-weight: bold;">
+				{% for contractToRenew in contractsToRenew %}
+					<li>{{ contractToRenew }}</li>
+				{% endfor %}
+			</ul>
+		</nav>
+	</div>
+
+	<div class="widget" id="widgetContractsPerDirection" style="background: #2FA5C3;">
+		<h1 class="indentBoth" id="titleContractsPerDirection">{{ contracts_per_direction|capitalize }}</h1>
+        <canvas id="contractsPerDirection" class="indentBoth">
+			{{ browserNotSupported|capitalize }}
+        </canvas>
+	</div>
+	
+	<div class="widget" id="widgetContractsPerYear" style="background: #2FA5C3;">
+		<h1 class="indentBoth" id="titleContractsPerYear">{{ contracts_per_year|capitalize }}</h1>
+		<span class="indentBoth" style="font-weight: bold; font-size: x-large;">
+		<label>{{ unit|capitalize }}</label>
+		<select id="unit" oninput="updateSort();">
+		{% for unit in units %}
+			<option value="{{ unit[0] }}">{{ unit[1] }}</option>
+		{% endfor %}
+		</select>
+		&nbsp;&nbsp;<label>{{ supplier|capitalize }}</label>
+		<select id="supplier" oninput="updateSort();">
+		{% for supplier in suppliers %}
+            <option value="{{ supplier[0] }}">{{ supplier[1] }}</option>
+        {% endfor %}
+		</select>
+		</span><br/>
+        <canvas id="contractsPerYear" class="indentBoth">
+			{{ browserNotSupported|capitalize }}
+        </canvas>
+	</div>
+
+</div>
+
+<div class="widget" id="widgetContractsPerAmount" style="background: #0094FF; min-height: 40%; max-width: 92%;">
+    <h1 class="indentBoth" id="titleContractsPerAmount">{{ amount_per_year|capitalize }}</h1>
+    <canvas id="contractsPerAmount" class="indentBoth">
+        {{ browserNotSupported|capitalize }}
+    </canvas>
+</div>
+
+<br/>
+
+<h1 class="title">{{ updateWebsiteData|capitalize }}</h1>
+
+<form action="upload" method="post" enctype="multipart/form-data">
+	<a href="download"><img src="res/download.svg" title="{{ download }}" style="height: 100px; cursor: pointer;"/></a>
+	{% if manage is defined %}
+		<input type="file" name="fileToUpload" oninput="upload()" hidden>
+		<img src="res/upload.svg" id="fileToUpload" title="{{ upload }}" onclick="document.getElementsByName('fileToUpload')[0].click();" style="height: 100px; cursor: pointer;"/>
+		<input type="submit" value="upload" name="submit" id="uploadButton" hidden>
+	{% endif %}
+</form>

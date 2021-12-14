@@ -1,0 +1,151 @@
+id: id
+name: nom
+supplier: fournisseur
+suppliers: fournisseurs
+add: ajouter
+delete: supprimer
+actions: actions
+Download as CSV: Télécharger au format CSV
+Upload as CSV: Téléverser au format CSV
+Download all data as CSV: Télécharger toutes les données au format CSV
+Upload all data as CSV: Téléverser toutes les données au format CSV
+date: date
+leader: responsable
+applicative leader: responsable applicatif
+domain: domaine
+supplier_id: id_fournisseur
+contracts: contrats
+contract: contrat
+content: contenu
+contract_leader_id: id_responsable_contrat
+applicative_leader_id: id_responsable_applicatif
+domain_id: id_domaine
+reception: accueil
+contracts counter: nombre de contrats
+Please upload a CSV file.: Merci de téléverser un fichier CSV.
+Sorry, there was an error uploading your file.: Désolé, il y a eu une erreur lors du téléversement de votre fichier.
+Supplier name can't be null: Le nom du fournisseur ne peut pas être vide
+Name can't be null: Le nom ne peut pas être vide
+log out: déconnexion
+Log out: Se déconnecter
+administrator: administrateur
+editor: contributeur
+viewer: consulteur
+you have access: vous avez les accès
+Sorry but no administrator has registered you.: Désolé mais aucun administrateur ne vous a enregistré.
+Sorry but your account has expired.: Désolé mais votre compte a expiré.
+You don't have the permission for editing.: Vous n'avez pas la permission d'éditer.
+You don't have the permission for managing.: Vous n'avez pas la permission de gérer.
+admin: administration
+User id can't be null: L'identifiant de l'utilisateur ne peut pas être vide
+user: utilisateur
+users: utilisateurs
+unit: unité
+units: unités
+collaborator: collaborateur
+collaborators: collaborateurs
+domains: domaines
+user id: id utilisateur
+permission level: niveau de permission
+Supplier name already in the list: Ce fournisseur a déjà été renseigné
+Name already in the list: Ce nom a déjà été rensigné
+all: tout
+number: numéro
+deletion couldn't be performed because this element is used in a contract !: la suppression n'a pas pu être effectuée car l'élément est utilisé dans un contrat !
+modify your own permissions was disable for security: modifier vos propres permissions a été désactivé pour des raisons de sécurité
+dashboard: panneau de bord
+edit: modifier
+modification date: dernière modification
+modification user: dernier éditeur
+modification_date: date_modification
+modification_user: éditeur
+applicative_leader: responsable_applicatif
+contract_leader: responsable
+begin date: date de début
+end date: date de fin
+amount: montant
+buy id: numéro d'achat
+market id: numéro de marché
+command id: numéro de commande
+poste id: numéro de poste
+comment: commentaire
+contracts to renew in next 6 months: contrats à renouveller
+update website data: données du site
+amount per year: montant par année
+your browser doesn't support canvas elements.: votre navigateur ne supporte pas les canvas.
+contracts per direction: contrats par domaine 
+contracts per year: contrats par an
+$: €
+creation date: date de création
+expiration date: date de fin de droit
+yes: oui
+no: non
+active: actif
+logs: logs
+accessed the logs: a accédé aux logs
+accessed the dashboard: a accédé au panneau de contrôle
+downloaded the whole website data: a téléchargé l'ensemble des données du site
+uploaded the whole website data: a téléversé l'ensemble des données du site
+modified: a modifié
+from: de
+to: à
+failed to delete: n'a pas réussi à supprimer
+because it is used in a contract: parce qu'il est utilisé dans un contrat
+deleted: a supprimé
+added: a ajouté
+accessed to: a accedé aux
+uploaded all: a téléversé tous les
+downloaded all: a téléchargé tous les
+associated to unit: associé à l'unité
+accessed the administrator panel: a accédé au menu des administrateurs
+all elements of: tous les
+with: avec
+access: accès
+expiring on: expirant le
+mail: email
+mails: emails
+contract time: durée de contrat
+contract id: numéro de contrat
+contract times: durées de contrat
+contract form: formulaire de saisie de contrat
+form to add a contract: formulaire d'ajout d'un contrat
+contract period: période
+Nothing in logs.: Il n'y a rien dans les logs.
+date help: aide sur la date
+number help: aide sur le numéro
+supplier help: aide sur le fournisseur
+content help: aide sur le contenu
+leader help: aide sur le responsable
+applicative leader help: aide sur le responsable applicatif
+domain help: aide sur le domaine
+active help: aide sur l'activité
+modification date help: aide sur la date de modification
+modification user help: aide sur l'éditeur
+begin date help: aide sur la date de début
+end date help: aide sur la date de fin
+amount help: aide sur le montant
+buy id help: aide sur le numéro d'achat
+market id help: aide sur le numéro de marché
+command id help: aide sur le numéro de commande
+poste id help: aide sur le numéro de poste
+comment help: aide sur le commentaire
+number of days before mailing: nombre de jours avant l'envoi d'un email de rappel de l'expiration d'un contrat
+parameters: paramétrage
+form: formulaire
+all of: tous
+contractForm: formulaire d'ajout de contrat
+add a contract time: ajouter une période au contrat
+delete this contract time: supprimer cette période du contrat
+add this contract: ajouter ce contrat
+next page: page suivante
+previous page: page précédente
+a value for unit must be provided: une valeur pour l'unité doit être donnée
+a value for permission level must be provided: une valeur pour le niveau de permission doit être donnée
+a value for supplier must be provided: une valeur pour le fournisseur doit être donnée
+a value for leader must be provided: une valeur pour le responsable doit être donnée
+a value for applicative leader must be provided: une valeur pour le responsable applicatif doit être donnée
+a value for domain must be provided: une valeur pour le domaine doit être donnée
+a value for active must be provided: une valeur pour le caractère actif doit être donnée
+a value for begin date must be provided: une valeur pour la date de début doit être donnée
+a value for end date must be provided: une valeur pour la date de fin doit être donnée
+a value for expiration date must be provided: une valeur pour la date de fin de droit doit être donnée

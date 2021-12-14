@@ -1,0 +1,574 @@
+{% set showParametersTabs = ['suppliers', 'units', 'collaborators', 'domains'] %}
+{% set showContractsTabs = ['contractForm'] %}
+{% set showLogsTabs = ['logs', 'mails'] %}
+
+<style>
+	html, body
+	{
+		height: 100%;
+		margin: 0;
+		background: rgb(246, 245, 254);
+	}
+
+	#leftBarFlex
+	{
+		display: flex;
+		height: 100%;
+	}
+
+	#leftBar
+	{
+		margin: 0;
+		background: #383947;
+		list-style-type: none;
+		padding-left: 1%;
+		padding-right: 1%;
+		margin-right: 1%;
+		border-right: double thick black;
+		height: 100%;
+		overflow-y: auto;
+		overflow-x: hidden;
+		flex-shrink: 0;
+		position: fixed;
+	}
+
+	#subParameters
+    {
+        background: silver;
+        list-style-type: none;
+        padding-left: 1%;
+        padding-right: 1%;
+		border-radius: 15px;
+    }
+
+	#subContracts
+    {
+        {% if currentPage in showContractsTabs %}
+            background: silver;
+        {% endif %}
+        list-style-type: none;
+        padding-left: 1%;
+        padding-right: 1%;
+        border-radius: 15px;
+    }
+
+	#subLogs
+    {
+        {% if currentPage in showLogsTabs %}
+            background: silver;
+        {% endif %}
+        list-style-type: none;
+        padding-left: 1%;
+        padding-right: 1%;
+        border-radius: 15px;
+    }
+
+	#leftBar a
+	{
+		color: white;
+		text-decoration: none;
+	}
+
+	#leftBar>a>li
+	{
+		text-align: center;
+		font-size: 1.5em;
+		border-radius: 15px;
+		padding-top: 5%;
+		padding-bottom: 5%;
+		margin-bottom: 5%;
+	}
+
+	#leftBar>li
+	{
+		text-align: center;
+        border-radius: 15px;
+        padding-top: 5%;
+        padding-bottom: 5%;
+        margin-bottom: 5%;
+	}
+
+	.parametersTitle
+	{
+		text-align: center;
+        font-size: 1.5em;
+        padding-top: 5%;
+        padding-bottom: 5%;
+        margin-bottom: 5%;
+	}
+
+	#subParameters li
+    {
+        text-align: center;
+        font-size: 1.5em;
+        border-radius: 15px;
+        padding-top: 5%;
+        padding-bottom: 5%;
+        margin-bottom: 5%;
+    }
+
+	#subContracts li
+    {
+        text-align: center;
+        font-size: 1.5em;
+        border-radius: 15px;
+        padding-top: 5%;
+        padding-bottom: 5%;
+        margin-bottom: 5%;
+    }
+
+	#subLogs li
+    {
+        text-align: center;
+        font-size: 1.5em;
+        border-radius: 15px;
+        padding-top: 5%;
+        padding-bottom: 5%;
+        margin-bottom: 5%;
+    }
+
+	#leftBar li a
+	{
+		color: black;
+	}
+
+	#leftBar>a>li:hover
+	{
+		background: #E9ECEB;
+		color: black;
+		transition: background-color 50ms linear;
+	}
+
+	#leftBar>li:hover
+	{
+		background: silver;
+        color: black;
+	}
+
+	#subParameters>a>li:hover
+	{
+		background: #E9ECEB;
+        color: black;
+        transition: background-color 50ms linear;
+	}
+
+	#subContracts>a>li:hover
+    {
+        background: #E9ECEB;
+        color: black;
+        transition: background-color 50ms linear;
+    }
+
+	#subLogs>a>li:hover
+    {
+        background: #E9ECEB;
+        color: black;
+        transition: background-color 50ms linear;
+    }
+
+	.current
+	{
+		background: #0077FF;
+		color: white;
+	}
+
+	#spoiler
+	{
+		padding: 10px;
+		height: 35px;
+		background: gainsboro;
+		border: double thick black;
+		border-left: none;
+		border-top: none;
+		cursor: pointer;
+	}
+
+	.title
+	{
+		font-family: Arial;
+		color: #30547C;
+	}
+
+	table, input, select
+	{
+		font-size: large;
+	}
+
+	thead, tfoot
+    {
+		font-family: Arial, Helvetica, sans-serif;
+		font-weight: bold;
+    	background-color: white;
+        color: black;
+    }
+
+    table, td
+    {
+	    border: 1px solid #E3E3E5;
+        border-collapse: collapse;
+    }
+
+	#table tr:hover
+	{
+		background: #ECECEC;
+	}
+
+	#pagination
+    {
+    	background: white;
+        display: inline-block;
+    }
+
+    #insidePagination
+    {
+    	margin: 10px;
+    }
+
+    #pageSwitch
+    {
+    	padding: 5px;
+        height: 20px;
+        width: 20px;
+        border-style: solid;
+		background: white;
+        cursor: pointer;
+    }
+
+	#pageNumbering
+	{
+		// could be removed if so useless
+	}
+
+	.action
+	{
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		height: 20px;
+		width: 20px;
+		cursor: pointer;
+	}
+
+	#help
+    {
+		display: inline-block;
+        margin-left: auto;
+        margin-right: auto;
+        height: 20px;
+        width: 20px;
+        cursor: help;
+    }
+
+	.downupload
+	{
+		height: 50px;
+		cursor: pointer;
+	}
+
+	.parameters
+	{
+		{% if not (currentPage in showParametersTabs) %}{# without parenthesis it doesn't work #}
+			visibility: hidden;
+			position: absolute;
+		{% endif %}
+	}
+
+	.contracts
+    {
+        {% if not (currentPage in showContractsTabs) %}
+            visibility: hidden;
+            position: absolute;
+        {% endif %}
+    }
+
+    #contractsTitle
+    {
+        {% if currentPage != 'contractForm' %}
+            color: white;
+        {% endif %}
+    }
+
+	.logs
+    {
+        {% if not (currentPage in showLogsTabs) %}
+            visibility: hidden;
+            position: absolute;
+        {% endif %}
+    }
+
+    #logsTitle
+    {
+        {% if not (currentPage in showLogsTabs) %}
+            color: white;
+        {% endif %}
+    }
+
+	thead, input, select, textarea
+	{
+    	font-weight: bold;
+    	font-size: large;
+    	border-style: none;
+    	border: 1.5px solid #E4E1E1;
+    	color: #434040;
+    	margin-top: 2%;
+    	margin-bottom: 2%;
+		padding-top: 3%;
+		padding-bottom: 3%;
+    	border-radius: 10px;
+	}
+
+	input[type=checkbox]
+	{
+  		transform: scale(2);
+  		padding: 10px;
+	}
+
+</style>
+<script>
+
+	var warning = false, inputBackup = '', lookForId = '', rowsData = [], firstRowIndex = 1, pagesCounter = 1, entriesPerPage = 1;
+
+	function updateLeftBarWidth()
+	{
+		var leftBar = document.getElementById('leftBar');
+		switchParameters();
+		var width = leftBar.offsetWidth;
+		//console.log('big width: ' + width);
+		switchParameters(true);
+		//leftBar.offsetWidth = width;
+		leftBar.style.width = width + 'px';
+		document.getElementById('pageContent').style.marginLeft = (leftBar.offsetWidth + 10) + 'px';
+		//console.log('new width: ' + leftBar.offsetWidth);
+	}
+
+	window.addEventListener('load', function ()
+    {
+		updateLeftBarWidth();
+	});
+
+	function getIndexById(id, data = rowsData)
+	{
+		for(var dataIndex = 0; dataIndex < data.length; dataIndex++)
+		{
+			if(data[dataIndex][0] == id)
+				return dataIndex;
+		}
+		return -1;
+	}
+
+	function uploadEntities()
+	{
+		document.getElementById("uploadEntitiesButton").click();
+	}
+
+	function generateRandomString(length)
+	{
+		var result = [], characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', charactersLength = characters.length;
+		for(var i = 0; i < length; i++)
+			result.push(characters.charAt(Math.floor(Math.random() * charactersLength)));
+		return result.join('');
+	}
+
+	function switchVisibility()
+	{
+		var leftBar = document.getElementById('leftBar'), isShown = leftBar.style.visibility != 'hidden', spoiler = document.getElementById('spoiler');
+		leftBar.style.visibility = isShown ? 'hidden' : 'visible';
+		leftBar.style.position = isShown ? 'absolute' : 'relative';
+		spoiler.src = 'res/' + (isShown ? 'expand' : 'reduce') + '.svg';
+	}
+
+	function loadURL(url)
+    {
+    	fetch(url);
+    }
+
+	function switchParameters(hide = false)
+	{
+		{% if currentPage in showParametersTabs %}
+			return;
+		{% endif %}
+		var parameters = document.getElementsByClassName('parameters')[0], parametersTitle = document.getElementsByClassName('parametersTitle')[0];
+		parameters.style.visibility = hide ? 'hidden' : 'visible';
+		parameters.style.position = hide ? 'absolute' : 'relative';
+		parametersTitle.style.color = hide ? 'white' : 'black';
+		parametersTitle.style.background = hide ? '#383947': 'silver';
+	}
+
+	function switchContracts(hide = false)
+    {
+        {% if currentPage in showContractsTabs %}
+            return;
+        {% endif %}
+        var contracts = document.getElementsByClassName('contracts')[0], contractsTitle = document.getElementById('contractsTitle');
+        contracts.style.visibility = hide ? 'hidden' : 'visible';
+        contracts.style.position = hide ? 'absolute' : 'relative';
+        {% if currentPage != 'contracts' %}
+            contractsTitle.style.color = hide ? 'white' : 'black';
+            contractsTitle.style.background = hide ? '#383947': 'silver';
+        {% endif %}
+    }
+
+	function switchLogs(hide = false)
+    {
+        {% if currentPage in showLogsTabs %}
+            return;
+        {% endif %}
+        var logs = document.getElementsByClassName('logs'), logsTitle = document.getElementById('logsTitle');
+		for(let log of logs) {
+        	log.style.visibility = hide ? 'hidden' : 'visible';
+        	log.style.position = hide ? 'absolute' : 'relative';
+		}
+        {% if currentPage != 'admin' %}
+            logsTitle.style.color = hide ? 'white' : 'black';
+            logsTitle.style.background = hide ? '#383947': 'silver';
+        {% endif %}
+    }
+	
+	// we prefer to put code used on multiple pages here in order not to have duplicated code (and if contracts for instance has a different version we can just also write in contract and because it includes first menu and then its code, its code function redeclaration overwrites previous declarations) - pay attention to script block order, menu really need to be include before any webpage specific script block
+	function getRowsCount()
+	{
+		return document.getElementsByClassName('aRow').length;
+	}
+	
+	function getCurrentPage()
+	{
+		return getPageFromRowIndex(firstRowIndex);
+	}
+
+	function clearRows()
+	{
+		var rows = document.getElementsByClassName('aRow'), rowsLength = rows.length;
+		
+		for(var rowsIndex = 0; rowsIndex < rowsLength; rowsIndex++)
+		{
+			rows[0].remove();
+		}
+	}
+			
+	function deleteEntityReal(id, send)
+	{
+		var pos = getIndexById(id);
+		rowsData.splice(pos, 1);
+		if(((pos > 0 && pos % entriesPerPage == 0) || (pos < firstRowIndex)) && getRowsCount() == 1)
+		{
+			firstRowIndex -= entriesPerPage;
+		}
+		clearRows();
+		refreshDisplay();
+		refreshPageNumbering();
+	}
+	
+	function previousPage()
+	{
+		clearRows();
+		firstRowIndex -= entriesPerPage;
+		refreshDisplay();
+		refreshPageNumbering();
+	}
+
+	function nextPage()
+	{
+		clearRows();
+		firstRowIndex += entriesPerPage;
+		refreshDisplay();
+		refreshPageNumbering();
+	}
+			
+	function refreshPagesCounter()
+	{
+		pagesCounter = getPageFromRowIndex(rowsData.length - 1);
+	}
+			
+	function getPageFromRowIndex(rowIndex)
+	{
+		var page = Math.ceil((rowIndex + 1) / entriesPerPage);
+		return page == 0 ? 1 : page;
+	}
+
+	function refreshPageNumbering()
+	{
+		var currentPage = getCurrentPage();
+		refreshPagesCounter();
+		document.getElementsByClassName('previousPage')[0].style.visibility = currentPage == 1 ? 'hidden' : 'visible';
+		document.getElementsByClassName('nextPage')[0].style.visibility = pagesCounter > currentPage ? 'visible' : 'hidden';
+		document.getElementById('pageNumbering').innerHTML = currentPage + ' / ' + pagesCounter;
+	}
+
+	function getViewportHeight()
+	{
+		return Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000);
+	}
+	
+	function onResize()
+	{
+		clearRows();
+		var table = document.getElementById('table'), row = table.insertRow(), inputEntity = document.createElement("INPUT");
+		row.insertCell().append(inputEntity);
+		var bcr = row.getBoundingClientRect();
+		row.remove();
+		var inputHeight = bcr.bottom - bcr.top + 1,
+			bcrUpload = document.getElementById('entitiesDownload').getBoundingClientRect(),
+			viewportHeight = getViewportHeight(); // 10000 is a maximal screen width/height that noone is about to reach
+			inputFromTopAndBottom = bcrUpload.top;
+		entriesPerPage = Math.floor((viewportHeight - inputFromTopAndBottom) / inputHeight) - 1;
+		if(entriesPerPage <= 0) entriesPerPage = 1; // to always display something even if not enough space on screen
+		firstRowIndex = 0;
+
+		refreshDisplay();
+		refreshPageNumbering();
+	}
+			
+	function onKeyUp(event)
+	{
+		if(event.keyCode === 13) // "enter" key
+		{
+			event.preventDefault();
+			addEntity();
+		}
+	}
+
+	function refreshDisplay()
+	{
+		for(var rowsDataIndex = firstRowIndex; rowsDataIndex < Math.min(firstRowIndex + entriesPerPage, rowsData.length); rowsDataIndex++)
+		{
+			addEntityRow(...rowsData[rowsDataIndex]);
+		}
+	}
+
+</script>
+<div id="leftBarFlex">
+	<ul id="leftBar">
+		<br/><img src="res/logo.png" style="width: 125px; margin-left: auto; margin-right: auto; display: block;"><br/>
+		<a href="/"><li class="{{ option0 }}">{{ receptionTab|upper }}</li></a>		
+
+		<li onmouseenter="switchContracts();" onmouseleave="switchContracts(true);" style="padding: 0px; color: {% if currentPage in showContractsTabs %}black; background: silver{% else %}white{% endif %};">
+            <ul id="subContracts">
+            <a href="contracts"><li class="{{ option6 }}" id="contractsTitle" onmouseenter="document.getElementById('contractsTitle').style.background = '#E9ECEB';" onmouseleave="document.getElementById('contractsTitle').style.background = '{% if currentPage == 'contracts' %}#0077FF{% else %}silver{% endif %}';">{{ contractsTab|upper }}</li></a>
+            <a href="contractForm" class="contracts"><li class="{{ option8 }}">{{ formTabName|upper }}</li></a>
+            </ul>
+        </li>
+		
+		<li onmouseenter="switchParameters();" onmouseleave="switchParameters(true);" style="color: {% if currentPage in showParametersTabs %}black; background: silver{% else %}white{% endif %};">
+			<span class="parametersTitle">{{ parameters|upper }}</span>
+			<ul id="subParameters" class="parameters">
+				<hr>
+				<a href="suppliers"><li class="{{ option1 }}">{{ suppliersTab|upper }}</li></a>
+				<a href="units"><li class="{{ option2 }}">{{ unitsTab|upper }}</li></a>
+				<a href="collaborators"><li class="{{ option3 }}">{{ collaboratorsTab|upper }}</li></a>
+				<a href="domains"><li class="{{ option4 }}">{{ domainsTab|upper }}</li></a>
+			</ul>
+		</li>
+
+		{% if manage is defined %}
+			<li onmouseenter="switchLogs();" onmouseleave="switchLogs(true);" style="padding: 0px; color: {% if currentPage in showLogsTabs %}black; background: silver{% else %}white{% endif %};">
+            	<ul id="subLogs">
+            	<a href="admin"><li class="{{ option7 }}" id="logsTitle" onmouseenter="document.getElementById('logsTitle').style.background = '#E9ECEB';" onmouseleave="document.getElementById('logsTitle').style.background = '{% if currentPage == 'admin' %}#0077FF{% else %}silver{% endif %}';">{{ adminTab|upper }}</li></a>
+            	<a href="logs" class="logs"><li class="{{ option9 }}">{{ logsTab|upper }}</li></a>
+            	<a href="mails" class="logs"><li class="{{ option5 }}">{{ mailsTab|upper }}</li></a>
+            	</ul>
+        	</li>
+		{% endif %}
+		<a href="{{ logoutURL }}"><li style="border-bottom: none;" title="{{ connectedAs|capitalize}} {{ permissionLevelStr }} ({{ userId }})">{{ logout|upper }}</li></a>
+	</ul>
+<div id="pageContent" style="width: 100%; height: 100%;">
+	<!--TODO: close this div-->
