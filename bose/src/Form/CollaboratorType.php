@@ -13,10 +13,10 @@ use App\Entity\Unit;
 class CollaboratorType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
-	{
-		$doc = $options['entity_manager'];
+    {
+        $doc = $options['entity_manager'];
 
-		$repository = $doc->getRepository(Unit::class);
+        $repository = $doc->getRepository(Unit::class);
         $units = $repository->findAll();
         $unitsCount = count($units);
         $unitsArr = array('' => 9007199254740991); // JavaScript MAX_SAFE_INTEGER
@@ -29,8 +29,8 @@ class CollaboratorType extends AbstractType
         }
 
         $builder // we manage all labels by hand without using Symfony
-			->add('name', null, array('label' => false, 'attr' => array('autofocus' => true)))
-			->add('unit_id', ChoiceType::class, [
+            ->add('name', null, array('label' => false, 'attr' => array('autofocus' => true)))
+            ->add('unit_id', ChoiceType::class, [
                     'label' => false,
                     'choices' => $unitsArr, // the point is to generate the select list of options available on the front-end
                     'choice_translation_domain' => false
@@ -42,7 +42,7 @@ class CollaboratorType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Collaborator::class,
-		]);
-		$resolver->setRequired('entity_manager');
+        ]);
+        $resolver->setRequired('entity_manager');
     }
 }

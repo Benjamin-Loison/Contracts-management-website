@@ -12,50 +12,50 @@ use DateTime;
 class User
 {
     /**
-	 * @ORM\Id()
-	 * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\Id()
+     * @ORM\GeneratedValue(strategy="AUTO")
      * @ORM\Column(type="integer")
      */
     public $id;
 
-	/**
-	 * @ORM\Column(type="string")
-	 */
-	public $userId;
+    /**
+     * @ORM\Column(type="string")
+     */
+    public $userId;
 
     /**
-	 * @ORM\Column(type="integer")
-	 */
+     * @ORM\Column(type="integer")
+     */
     public $permissionLevel;
 
-	/**
+    /**
     * @ORM\Column(type="datetime")
     */
-	public $creationDate;
+    public $creationDate;
 
-	/**
+    /**
     * @ORM\Column(type="datetime")
     */
-	public $expirationDate;
+    public $expirationDate;
 
-	// let's not use an active parameter because it would in many cases not be perfectly up to date so we just compute it when required
+    // let's not use an active parameter because it would in many cases not be perfectly up to date so we just compute it when required
 
-	public function __construct()
+    public function __construct()
     {
         $this->creationDate = new DateTime();
     }
 
-	public function getId()
-	{
-		return $this->id;
-	}
+    public function getId()
+    {
+        return $this->id;
+    }
 
-	public function setId($id)
-	{
-		$this->id = $id;
-	}
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
-	public function getUserId()
+    public function getUserId()
     {
         return $this->userId;
     }
@@ -63,9 +63,9 @@ class User
     public function setUserId($userId)
     {
         $this->userId = $userId;
-	}
+    }
 
-	public function getPermissionLevel()
+    public function getPermissionLevel()
     {
         return $this->permissionLevel;
     }
@@ -73,25 +73,25 @@ class User
     public function setPermissionLevel($permissionLevel)
     {
         $this->permissionLevel = $permissionLevel;
-	}
+    }
 
-	public function getCreationDate()
-	{
-		return $this->creationDate;
-	}
+    public function getCreationDate()
+    {
+        return $this->creationDate;
+    }
 
-	public function setCreationDate($creationDate)
-	{
-		$this->creationDate = $creationDate;
-	}
+    public function setCreationDate($creationDate)
+    {
+        $this->creationDate = $creationDate;
+    }
 
-	public function getExpirationDate()
-	{
-		return $this->expirationDate;
-	}
+    public function getExpirationDate()
+    {
+        return $this->expirationDate;
+    }
 
-	public function setExpirationDate($expirationDate)
-	{
-		$this->expirationDate = $expirationDate;
-	}
+    public function setExpirationDate($expirationDate)
+    {
+        $this->expirationDate = $expirationDate;
+    }
 }

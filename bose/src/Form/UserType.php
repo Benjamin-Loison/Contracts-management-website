@@ -14,18 +14,18 @@ class UserType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-		$builder
-			->add('userId', TextType::class, array('label' => false, 'attr' => array('autofocus' => true)))
-			->add('permissionLevel', ChoiceType::class, array('label' => false,
-					'row_attr' => ['class' => 'center'],
-					'choices' => [
-						'' => 9007199254740991,	
-						'viewer' => 0,
-						'editor' => 1,
-						'administrator' => 2
-				]))
-			->add('creationDate', DateType::class, array('label' => false, 'widget' => 'single_text', 'disabled' => true))
-			->add('expirationDate', DateType::class, array('label' => false, 'widget' => 'single_text'))
+        $builder
+            ->add('userId', TextType::class, array('label' => false, 'attr' => array('autofocus' => true)))
+            ->add('permissionLevel', ChoiceType::class, array('label' => false,
+                    'row_attr' => ['class' => 'center'],
+                    'choices' => [
+                        '' => 9007199254740991, 
+                        'viewer' => 0,
+                        'editor' => 1,
+                        'administrator' => 2
+                ]))
+            ->add('creationDate', DateType::class, array('label' => false, 'widget' => 'single_text', 'disabled' => true))
+            ->add('expirationDate', DateType::class, array('label' => false, 'widget' => 'single_text'))
         ;
     }
     

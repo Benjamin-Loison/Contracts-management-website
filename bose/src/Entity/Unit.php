@@ -18,22 +18,22 @@ class Unit
     public $id;
 
     /**
-	 * @ORM\Column(type="string")
-	 * @Assert\NotBlank(message = "le contenu ne peut pas être vide.")
-	 */
+     * @ORM\Column(type="string")
+     * @Assert\NotBlank(message = "le contenu ne peut pas être vide.")
+     */
     public $name;
 
-	public function getId()
-	{
-		return $this->id;
-	}
+    public function getId()
+    {
+        return $this->id;
+    }
 
-	public function setId($id)
-	{
-		$this->id = $id;
-	}
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
-	public function getName()
+    public function getName()
     {
         return $this->name;
     }
@@ -41,5 +41,5 @@ class Unit
     public function setName($name)
     {
         $this->name = $name;
-	}
+    }
 }

@@ -6,23 +6,23 @@
 
 .form
 {
-	background: white;
-	padding-left: 2%;
-	padding-right: 2%;
-	display: inline-block;
-	font-weight: bold;
-	box-shadow: -10px -5px 5px #E8E8E8;
-	margin-bottom: 3%;
-	position: relative;
+    background: white;
+    padding-left: 2%;
+    padding-right: 2%;
+    display: inline-block;
+    font-weight: bold;
+    box-shadow: -10px -5px 5px #E8E8E8;
+    margin-bottom: 3%;
+    position: relative;
     left: 50%;
-	text-align: center;
+    text-align: center;
 }
 
 .formContent
 {
-	text-align: left;
-	font-size: large;
-	display: flex;
+    text-align: left;
+    font-size: large;
+    display: flex;
 }
 
 input, select, textarea
@@ -39,101 +39,101 @@ input, select, textarea
 
 #wrapper
 {
-	margin-top: 2%;
+    margin-top: 2%;
 }
 
 .plus
 {
-	height: 40px;
+    height: 40px;
     width: 40px;
     cursor: pointer;
     float: right;
-	margin-top: 4%;
-	margin-bottom: 4%;
+    margin-top: 4%;
+    margin-bottom: 4%;
 }
 
 </style>
 
 <script>
 
-	window.addEventListener('load', function ()
-	{
-		document.getElementById("contract_active").value = 1;
-	});
-
-	function removeContractTime()
+    window.addEventListener('load', function ()
     {
-		var forms = document.getElementsByClassName('form'), formsLength = forms.length, form = forms[formsLength - 1];
-		forms[formsLength - 2].querySelector('#contractAction').innerHTML = '<img src="res/contract.svg" title="{{ addThisContract|capitalize }}" class="plus" onclick="addContract();"><img src="res/plus.svg" title="{{ addAContractTime|capitalize }}" class="plus" onclick="addContractTime();">' + (formsLength >= 4 ? '<img src="res/cross.svg" title="{{ deleteThisContractTime|capitalize }}" class="plus" onclick="removeContractTime();">' : '');
-		forms[formsLength - 2].scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-		forms[formsLength - 1].remove();
-	}
+        document.getElementById("contract_active").value = 1;
+    });
 
-	function addContractTime()
-	{
-		var forms = document.getElementsByClassName('form'), formsLength = forms.length, form = forms[formsLength - 1], newForm = form.cloneNode(true);
-		newForm.querySelector('.title').innerHTML = '{{ contractPeriod|capitalize }} ' + formsLength;
-		newForm.querySelector('#beginDate').value = '';
-		newForm.querySelector('#endDate').value = '';
-		newForm.querySelector('#amount').value = '';
-		newForm.querySelector('#buyId').value = '';
-		newForm.querySelector('#marketId').value = '';
-		newForm.querySelector('#commandId').value = '';
-		newForm.querySelector('#posteId').value = '';
-		newForm.querySelector('#comment').value = '';
-		if(formsLength == 2)
-			newForm.querySelector('#contractAction').innerHTML += '<img src="res/cross.svg" title="{{ deleteThisContractTime|capitalize }}" class="plus" onclick="removeContractTime();">';
-		form.querySelector('#contractAction').innerHTML = '<br/>';
-		form.after(newForm);
-		newForm.before(document.createElement("br"));
-		updateTotalHeight(); // we don't always use auto scroll, to keep element at top, because sometimes it means adding blank space below
-		newForm.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-	}
+    function removeContractTime()
+    {
+        var forms = document.getElementsByClassName('form'), formsLength = forms.length, form = forms[formsLength - 1];
+        forms[formsLength - 2].querySelector('#contractAction').innerHTML = '<img src="res/contract.svg" title="{{ addThisContract|capitalize }}" class="plus" onclick="addContract();"><img src="res/plus.svg" title="{{ addAContractTime|capitalize }}" class="plus" onclick="addContractTime();">' + (formsLength >= 4 ? '<img src="res/cross.svg" title="{{ deleteThisContractTime|capitalize }}" class="plus" onclick="removeContractTime();">' : '');
+        forms[formsLength - 2].scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+        forms[formsLength - 1].remove();
+    }
 
-	function addContract()
-	{
-		var number = document.getElementById('contract_number').value,
-			date = new Date().toISOString().slice(0, 10),
-			supplierId = document.getElementById('contract_supplier_id').value,
-			content = document.getElementById('contract_content').value,
-			leaderId = document.getElementById('contract_contract_leader_id').value,
-			applicativeLeaderId = document.getElementById('contract_applicative_leader_id').value,
-			domainId = document.getElementById('contract_domain_id').value,
-			active = document.getElementById('contract_active').value;
+    function addContractTime()
+    {
+        var forms = document.getElementsByClassName('form'), formsLength = forms.length, form = forms[formsLength - 1], newForm = form.cloneNode(true);
+        newForm.querySelector('.title').innerHTML = '{{ contractPeriod|capitalize }} ' + formsLength;
+        newForm.querySelector('#beginDate').value = '';
+        newForm.querySelector('#endDate').value = '';
+        newForm.querySelector('#amount').value = '';
+        newForm.querySelector('#buyId').value = '';
+        newForm.querySelector('#marketId').value = '';
+        newForm.querySelector('#commandId').value = '';
+        newForm.querySelector('#posteId').value = '';
+        newForm.querySelector('#comment').value = '';
+        if(formsLength == 2)
+            newForm.querySelector('#contractAction').innerHTML += '<img src="res/cross.svg" title="{{ deleteThisContractTime|capitalize }}" class="plus" onclick="removeContractTime();">';
+        form.querySelector('#contractAction').innerHTML = '<br/>';
+        form.after(newForm);
+        newForm.before(document.createElement("br"));
+        updateTotalHeight(); // we don't always use auto scroll, to keep element at top, because sometimes it means adding blank space below
+        newForm.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+    }
 
-		if(supplierId == Number.MAX_SAFE_INTEGER)
+    function addContract()
+    {
+        var number = document.getElementById('contract_number').value,
+            date = new Date().toISOString().slice(0, 10),
+            supplierId = document.getElementById('contract_supplier_id').value,
+            content = document.getElementById('contract_content').value,
+            leaderId = document.getElementById('contract_contract_leader_id').value,
+            applicativeLeaderId = document.getElementById('contract_applicative_leader_id').value,
+            domainId = document.getElementById('contract_domain_id').value,
+            active = document.getElementById('contract_active').value;
+
+        if(supplierId == Number.MAX_SAFE_INTEGER)
         {
-        	alert("{{ aValueForSupplierMustBeProvided|capitalize }}");
+            alert("{{ aValueForSupplierMustBeProvided|capitalize }}");
             return;
         }
         if(leaderId == Number.MAX_SAFE_INTEGER)
         {
-        	alert("{{ aValueForLeaderMustBeProvided|capitalize }}");
+            alert("{{ aValueForLeaderMustBeProvided|capitalize }}");
             return;
         }
         if(applicativeLeaderId == Number.MAX_SAFE_INTEGER)
         {
             alert("{{ aValueForApplicativeLeaderMustBeProvided|capitalize }}");
-        	return;
+            return;
         }
         if(domainId == Number.MAX_SAFE_INTEGER)
         {
             alert("{{ aValueForDomainMustBeProvided|capitalize }}");
-        	return;
+            return;
         }
         if(active == Number.MAX_SAFE_INTEGER)
         {
             alert("{{ aValueForActiveMustBeProvided|capitalize }}");
-        	return;
+            return;
         }
 
-		var forms = document.getElementsByClassName('form'), formsLength = forms.length;
+        var forms = document.getElementsByClassName('form'), formsLength = forms.length;
         for(var formsIndex = 1; formsIndex < formsLength; formsIndex++)
         {
             var form = forms[formsIndex],
-        	    beginDate = form.querySelector('#beginDate').value,
+                beginDate = form.querySelector('#beginDate').value,
                 endDate = form.querySelector('#endDate').value;
-			if(beginDate == '')
+            if(beginDate == '')
             {
                 alert("{{ aValueForBeginDateMustBeProvided|capitalize }}");
                 return;
@@ -143,126 +143,126 @@ input, select, textarea
                 alert("{{ aValueForEndDateMustBeProvided|capitalize }}");
                 return;
             }
-		}
+        }
 
-		fetch('addContract/number=' + number + '/date=' + date + '/supplierId=' + supplierId + '/content=' + content + '/leaderId=' + leaderId + '/applicativeLeaderId=' + applicativeLeaderId + '/domainId=' + domainId + '/active=' + active + '/modificationDate=' + date + '/modificationUserId={{ userIdId }}/lookForId=').then(function(response)
-		{
-			return response.text();
-		}).then(function(html)
-		{
-			var forms = document.getElementsByClassName('form'), formsLength = forms.length, contractId = html;
-			for(var formsIndex = 1; formsIndex < formsLength; formsIndex++)
-			{
-				var form = forms[formsIndex],
-					beginDate = form.querySelector('#beginDate').value,
-					endDate = form.querySelector('#endDate').value,
-					amount = form.querySelector('#amount').value,
-					buyId = form.querySelector('#buyId').value,
-					marketId = form.querySelector('#marketId').value,
-					commandId = form.querySelector('#commandId').value,
-					posteId = form.querySelector('#posteId').value,
-					comment = form.querySelector('#comment').value,
-					url = "addContractTime/contractId=" + contractId + "/beginDate=" + beginDate + "/endDate=" + endDate + "/amount=" + amount + "/buyId=" + buyId + "/marketId=" + marketId + "/commandId=" + commandId + "/posteId=" + posteId + "/comment=" + comment + "/lookForId=";
-				console.log(url);
-				loadURL(url);
-			}
-			window.location = 'contracts';
-		});
-	}
+        fetch('addContract/number=' + number + '/date=' + date + '/supplierId=' + supplierId + '/content=' + content + '/leaderId=' + leaderId + '/applicativeLeaderId=' + applicativeLeaderId + '/domainId=' + domainId + '/active=' + active + '/modificationDate=' + date + '/modificationUserId={{ userIdId }}/lookForId=').then(function(response)
+        {
+            return response.text();
+        }).then(function(html)
+        {
+            var forms = document.getElementsByClassName('form'), formsLength = forms.length, contractId = html;
+            for(var formsIndex = 1; formsIndex < formsLength; formsIndex++)
+            {
+                var form = forms[formsIndex],
+                    beginDate = form.querySelector('#beginDate').value,
+                    endDate = form.querySelector('#endDate').value,
+                    amount = form.querySelector('#amount').value,
+                    buyId = form.querySelector('#buyId').value,
+                    marketId = form.querySelector('#marketId').value,
+                    commandId = form.querySelector('#commandId').value,
+                    posteId = form.querySelector('#posteId').value,
+                    comment = form.querySelector('#comment').value,
+                    url = "addContractTime/contractId=" + contractId + "/beginDate=" + beginDate + "/endDate=" + endDate + "/amount=" + amount + "/buyId=" + buyId + "/marketId=" + marketId + "/commandId=" + commandId + "/posteId=" + posteId + "/comment=" + comment + "/lookForId=";
+                console.log(url);
+                loadURL(url);
+            }
+            window.location = 'contracts';
+        });
+    }
 
 </script>
 
 <div id="wrapper">
-	<div class="form" style="transform: translateX(-65%);">
-		<h1 class="title" style="/*color: #7C7A7A;*/">{{ formToAddContract |capitalize }}</h1>
-		
-		<hr>
-		
-		<div class="formContent">
-			<div>
-				<label>{{ number|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ numberHelp|capitalize }}" id="help"/>
-				{{ form_row(form.number) }}<br/>
-		
-				<label>{{ supplier|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ supplierHelp|capitalize }}" id="help"/>
-				{{ form_row(form.supplier_id) }}<br/>
-			</div>
+    <div class="form" style="transform: translateX(-65%);">
+        <h1 class="title" style="/*color: #7C7A7A;*/">{{ formToAddContract |capitalize }}</h1>
+        
+        <hr>
+        
+        <div class="formContent">
+            <div>
+                <label>{{ number|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ numberHelp|capitalize }}" id="help"/>
+                {{ form_row(form.number) }}<br/>
+        
+                <label>{{ supplier|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ supplierHelp|capitalize }}" id="help"/>
+                {{ form_row(form.supplier_id) }}<br/>
+            </div>
 
-			<div style="margin-right: 5%;"></div>
+            <div style="margin-right: 5%;"></div>
 
-			<div>
-				<label>{{ content|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ contentHelp|capitalize }}" id="help"/>
-				{{ form_row(form.content) }}<br/>
+            <div>
+                <label>{{ content|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ contentHelp|capitalize }}" id="help"/>
+                {{ form_row(form.content) }}<br/>
 
-				<label>{{ leader|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ leaderHelp|capitalize }}" id="help"/>
-            	{{ form_row(form.contract_leader_id) }}<br/>
-			</div>	
+                <label>{{ leader|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ leaderHelp|capitalize }}" id="help"/>
+                {{ form_row(form.contract_leader_id) }}<br/>
+            </div>  
 
-			<div style="margin-right: 5%;"></div>
-	
-			<div>
-				<label>{{ applicative_leader|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ applicative_leaderHelp|capitalize }}" id="help"/>
-            	{{ form_row(form.applicative_leader_id) }}<br/>
+            <div style="margin-right: 5%;"></div>
+    
+            <div>
+                <label>{{ applicative_leader|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ applicative_leaderHelp|capitalize }}" id="help"/>
+                {{ form_row(form.applicative_leader_id) }}<br/>
 
-				<label>{{ domain|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ domainHelp|capitalize }}" id="help"/>
-            	{{ form_row(form.domain_id) }}<br/>
+                <label>{{ domain|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ domainHelp|capitalize }}" id="help"/>
+                {{ form_row(form.domain_id) }}<br/>
 
-				<label>{{ active|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ activeHelp|capitalize }}" id="help"/>
-            	{{ form_row(form.active) }}<br/>
-			</div>
+                <label>{{ active|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ activeHelp|capitalize }}" id="help"/>
+                {{ form_row(form.active) }}<br/>
+            </div>
 
-			<div style="width: 100px;"></div>
-		</div>
-	</div><br/>
+            <div style="width: 100px;"></div>
+        </div>
+    </div><br/>
 
-	<div class="form" style="transform: translateX(-65%);">
-		<h1 class="title">{{ contractPeriod|capitalize }} 1</h1>
-		
-		<hr>
+    <div class="form" style="transform: translateX(-65%);">
+        <h1 class="title">{{ contractPeriod|capitalize }} 1</h1>
+        
+        <hr>
 
-		<div class="formContent">
-			<div>
+        <div class="formContent">
+            <div>
             <label>{{ beginDate|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ beginDateHelp|capitalize }}" id="help"/><br/>
             <input type="date" id="beginDate"><br/>
-			
-			<label>{{ endDate|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ endDateHelp|capitalize }}" id="help"/><br/>
+            
+            <label>{{ endDate|capitalize }}</label>&nbsp;<img src="res/question_mark.svg" title="{{ endDateHelp|capitalize }}" id="help"/><br/>
             <input type="date" id="endDate"><br/>
 
-			<label>{{ amount|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ amountHelp|capitalize }}" id="help"/><br/>
-			<input type="number" id="amount" min="0"><br/>
-			</div>
-
-			<div style="margin-right: 5%;">
+            <label>{{ amount|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ amountHelp|capitalize }}" id="help"/><br/>
+            <input type="number" id="amount" min="0"><br/>
             </div>
 
-			<div>
-			<label>{{ buyId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ buyIdHelp|capitalize }}" id="help"/><br/>
+            <div style="margin-right: 5%;">
+            </div>
+
+            <div>
+            <label>{{ buyId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ buyIdHelp|capitalize }}" id="help"/><br/>
             <input id="buyId"><br/>
 
-			<label>{{ marketId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ marketIdHelp|capitalize }}" id="help"/><br/>
+            <label>{{ marketId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ marketIdHelp|capitalize }}" id="help"/><br/>
             <input type="number" id="marketId"><br/>
 
-			<label>{{ commandId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ commandIdHelp|capitalize }}" id="help"/><br/>
+            <label>{{ commandId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ commandIdHelp|capitalize }}" id="help"/><br/>
             <input type="number" id="commandId"><br/>
-			</div>
-
-			<div style="margin-right: 5%;">
             </div>
 
-			<div>
-			<label>{{ posteId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ posteIdHelp|capitalize }}" id="help"/><br/>
+            <div style="margin-right: 5%;">
+            </div>
+
+            <div>
+            <label>{{ posteId|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ posteIdHelp|capitalize }}" id="help"/><br/>
             <input type="number" id="posteId"><br/>
 
-			<label>{{ comment|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ commentHelp|capitalize }}" id="help"/><br/>
+            <label>{{ comment|capitalize}}</label>&nbsp;<img src="res/question_mark.svg" title="{{ commentHelp|capitalize }}" id="help"/><br/>
             <textarea id="comment"></textarea><br/>
 
-			<span id="contractAction">
-				<img src="res/contract.svg" title="{{ addThisContract|capitalize }}" class="plus" onclick="addContract();">
-				<img src="res/plus.svg" title="{{ addAContractTime|capitalize }}" class="plus" onclick="addContractTime();">
-			</span>
-			</div>
-
-			<div style="width: 100px;">
+            <span id="contractAction">
+                <img src="res/contract.svg" title="{{ addThisContract|capitalize }}" class="plus" onclick="addContract();">
+                <img src="res/plus.svg" title="{{ addAContractTime|capitalize }}" class="plus" onclick="addContractTime();">
+            </span>
             </div>
-		</div>
-	</div>
+
+            <div style="width: 100px;">
+            </div>
+        </div>
+    </div>
 </div>

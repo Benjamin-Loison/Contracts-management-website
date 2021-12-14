@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class ContractTime 
 {
 
-	// the ORM annotation system doesn't allow multiplive variables declaration in a single line (having the same characteristics)
+    // the ORM annotation system doesn't allow multiplive variables declaration in a single line (having the same characteristics)
 
     /**
     * @ORM\Id()
@@ -20,62 +20,62 @@ class ContractTime
     */
     public $id;
 
-	/**
-	* @ORM\Column(type="integer")
-	*/
-	public $contractId;
+    /**
+    * @ORM\Column(type="integer")
+    */
+    public $contractId;
 
-	/**
+    /**
     * @ORM\Column(type="datetime")
     */
-	public $beginDate;
+    public $beginDate;
 
-	/**
+    /**
     * @ORM\Column(type="datetime")
     */
-	public $endDate;
+    public $endDate;
 
-	/**
-	* @ORM\Column(type="float")
-	*/
-	public $amount;
+    /**
+    * @ORM\Column(type="float")
+    */
+    public $amount;
 
-	/**
+    /**
     * @ORM\Column(type="integer")
     */
-	public $marketId;
+    public $marketId;
 
-	/**
+    /**
     * @ORM\Column(type="integer")
     */
-	public $commandId;
+    public $commandId;
 
-	/**
+    /**
     * @ORM\Column(type="integer")
     */
-	public $posteId;
+    public $posteId;
 
-	/**
+    /**
     * @ORM\Column(type="string")
     */
-	public $buyId;
-	
-	/**
+    public $buyId;
+    
+    /**
     * @ORM\Column(type="string")
     */
-	public $comment;
+    public $comment;
 
-	public function getId()
-	{
-		return $this->id;
-	}
+    public function getId()
+    {
+        return $this->id;
+    }
 
-	public function setId($id)
-	{
-		$this->id = $id;
-	}
+    public function setId($id)
+    {
+        $this->id = $id;
+    }
 
-	public function getContractId()
+    public function getContractId()
     {
         return $this->contractId;
     }
@@ -85,17 +85,17 @@ class ContractTime
         $this->contractId = $contractId;
     }
 
-	public function getBeginDate()
-	{
-		return $this->beginDate;
-	}
+    public function getBeginDate()
+    {
+        return $this->beginDate;
+    }
 
-	public function setBeginDate($beginDate)
-	{
-		$this->beginDate = $beginDate;
-	}
+    public function setBeginDate($beginDate)
+    {
+        $this->beginDate = $beginDate;
+    }
 
-	public function getEndDate()
+    public function getEndDate()
     {
         return $this->endDate;
     }
@@ -103,29 +103,29 @@ class ContractTime
     public function setEndDate($endDate)
     {
         $this->endDate = $endDate;
-	}
+    }
 
-	public function getAmount()
-	{
-		return $this->amount;
-	}
+    public function getAmount()
+    {
+        return $this->amount;
+    }
 
-	public function setAmount($amount)
-	{
-		$this->amount = $amount;
-	}
+    public function setAmount($amount)
+    {
+        $this->amount = $amount;
+    }
 
-	public function getBuyId()
-	{
-		return $this->buyId;
-	}
+    public function getBuyId()
+    {
+        return $this->buyId;
+    }
 
-	public function setBuyId($buyId)
-	{
-		$this->buyId = $buyId;
-	}
+    public function setBuyId($buyId)
+    {
+        $this->buyId = $buyId;
+    }
 
-	public function getMarketId()
+    public function getMarketId()
     {
         return $this->marketId;
     }
@@ -135,7 +135,7 @@ class ContractTime
         $this->marketId = $marketId;
     }
 
-	public function getCommandId()
+    public function getCommandId()
     {
         return $this->commandId;
     }
@@ -145,7 +145,7 @@ class ContractTime
         $this->commandId = $commandId;
     }
 
-	public function getPosteId()
+    public function getPosteId()
     {
         return $this->posteId;
     }
@@ -155,7 +155,7 @@ class ContractTime
         $this->posteId = $posteId;
     }
 
-	public function getComment()
+    public function getComment()
     {
         return $this->comment;
     }
