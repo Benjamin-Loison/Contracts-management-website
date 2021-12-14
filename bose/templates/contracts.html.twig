@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+		<title>{{ contractsTab|capitalize }}</title>
+		<style>
+			.noBorder
+			{
+				border-style: none;
+                margin-left: auto;
+                margin-right: auto;
+			}
+		</style>
+    </head>
+    <body>
+		{% include 'menu.html.twig' %}
+		<script>
+			function getIndexByContractTimeId(contractTimeId)
+			{
+				var contractTimesLength = contractTimes.length;// = contractTimes[contractTimeId][1];
+                for(var contractTimesIndex = 0; contractTimesIndex < contractTimesLength; contractTimesIndex++)
+                {
+                    var contractTime = contractTimes[contractTimesIndex];
+                    if(contractTime[0] == contractTimeId)
+                    {
+                        return contractTime[1];
+                    }
+                }
+			}
+
+			function deleteEntity(id, send = true)
+			{
+				var pos = getIndexById(id);
+				rowsData.splice(pos, 1/*2*/);
+				recalculateRowsDataSorted();
+				var details = document.getElementById('details' + id);
+				if(details != null) details.remove();
+				if(send)
+				{
+					fetch("deleteContract/" + id + '/' + lookForId);
+				}
+				if(((pos > 0 && pos % entriesPerPage == 0) || (pos < firstRowIndex)) && getRowsCount() == 1)
+				{
+					firstRowIndex -= entriesPerPage;
+				}
+				clearRows();
+				refreshDisplay();
+				refreshPageNumbering();
+			}
+
+			function deleteContractTime(id, send = true)
+            {
+                var pos = getIndexByContractTimeId(id);
+                contractTimes.splice(pos, 1);
+                document.getElementById('cT' + id).remove();
+                if(send)
+                {
+                    fetch("deleteContractTime/" + id + '/' + lookForId);
+                }
+                refreshPageNumbering();
+            }
+
+			var rowsDataSorted = [], contractTimes = [], suppliers = [], collaborators = [], domains = [], users = [], units = [], expandedIndex = Number.MAX_SAFE_INTEGER;
+
+			function addEntityData(id, number, date, supplierId, name, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId, received)
+			{
+				rowsData.push([id, number, date, supplierId, name, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId]);
+				if(!received) recalculateRowsDataSorted();
+				if(getRowsCount() == entriesPerPage + 1 && !received)
+                {
+                    clearRows();
+                    if(getCurrentPage() == pagesCounter)
+                        pagesCounter++;
+                    firstRowIndex += (pagesCounter - getCurrentPage()) * entriesPerPage;
+					refreshDisplay();
+                }
+                refreshPageNumbering();
+			}
+
+			function addContractTimeData(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment)
+			{
+				contractTimes.push([id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment]);
+			}
+
+			function addSelect(newLine, data, entityId, id, dataName, disabled = false)
+			{
+				var options = '';
+				for(var dataIndex = 0; dataIndex < data.length; dataIndex++)
+                {
+                    var entity = data[dataIndex], ide = entity[0], name = entity[1];
+                    options += '<option value="' + ide + '"' + (ide == entityId ? ' selected' : '') + '>' + name + '</option>';
+                }
+				var disabledStr = "{% if not edit is defined %} disabled{% else %}{% endif %}";
+				if(disabledStr == '' && disabled) disabledStr = ' disabled';
+                newLine.insertCell().innerHTML = '<select id="input' + dataName + 'Id' + id + '" oninput="modifyEntity(' + id + ')"' + disabledStr + '>' + options + '</select>';
+			}
+
+			// every contract year details are coded on the webpage but not show and put the edit button to hide or not the details of a given contract which is by default hidden
+			function switchDetails(id)
+			{
+				var lineDetails = document.getElementById("details" + id), isHidden = lineDetails.style.visibility == 'hidden';
+                lineDetails.style.visibility = isHidden ? 'visible' : 'hidden';
+               	lineDetails.style.position = isHidden ? 'relative' : 'absolute';
+			}
+
+			function modifyContractTime(contractTimeId)
+			{
+				var contractId = getIndexByContractTimeId(contractTimeId);
+				modifyContractMetadata(contractId);
+
+				var beginDate = document.getElementById('inputDetailsBeginDate' + contractTimeId).value,
+                    endDate = document.getElementById('inputDetailsEndDate' + contractTimeId).value,
+                    amount = document.getElementById('inputDetailsAmount' + contractTimeId).value,
+                    buyId = document.getElementById('inputDetailsBuyId' + contractTimeId).value,
+                    marketId = document.getElementById('inputDetailsMarketId' + contractTimeId).value,
+                    commandId = document.getElementById('inputDetailsCommandId' + contractTimeId).value,
+                    posteId = document.getElementById('inputDetailsPosteId' + contractTimeId).value,
+                    comment = document.getElementById('inputDetailsComment' + contractTimeId).value;
+                loadURL("/modifyContractTime/id=" + contractTimeId + '/beginDate=' + beginDate + '/endDate=' + endDate + '/amount=' + amount + '/buyId=' + buyId + '/marketId=' + marketId + '/commandId=' + commandId + '/posteId=' + posteId + '/comment=' + comment + '/lookForId=' + lookForId);
+			}
+
+			function modifyContractMetadata(id)
+			{
+				document.getElementById('inputModificationDate' + id).value = new Date().toISOString().slice(0, 10);
+
+                setSelectByText('inputModificationUserId' + id, "{{ userId }}");
+			}
+
+			function addContractTimeRow(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment)
+			{
+				if(!entityFitsSortsByContractId(contractId)) return;
+				var table = document.getElementById("tbody" + contractId);
+				if(table == null) return;
+				var newLine = table.insertRow(/*index*/{% if edit is defined %}table.rows.length - 1{% endif %}), idUsed = id;//contractId
+				newLine.id = "cT" + id;
+                newLine.insertCell().innerHTML = '<input id="inputDetailsBeginDate' + idUsed + '" type="date" value="' + beginDate + '" oninput="modifyContractTime(' + id + ')" {% if not edit is defined %}disabled{% endif %}>'; // I think twig support directly being used within string
+                newLine.insertCell().innerHTML = '<input id="inputDetailsEndDate' + idUsed + '" type="date" value="' + endDate + '" oninput="modifyContractTime(' + id + ')" {% if not edit is defined %}disabled{% endif %}>';
+				newLine.insertCell().innerHTML = '<input id="inputDetailsAmount' + idUsed + '" type="number" min="0" value="' + amount + '" oninput="modifyContractTime(' + id + ')" {% if not edit is defined %}disabled{% endif %}>';
+				newLine.insertCell().innerHTML = '<input id="inputDetailsBuyId' + idUsed + '" type="string" value="' + buyId + '" oninput="modifyContractTime(' + id + ')" ' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
+				newLine.insertCell().innerHTML = '<input id="inputDetailsMarketId' + idUsed + '" type="number" value="' + marketId + '" oninput="modifyContractTime(' + id + ')" ' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
+				newLine.insertCell().innerHTML = '<input id="inputDetailsCommandId' + idUsed + '" type="number" value="' + commandId + '" oninput="modifyContractTime(' + id + ')" ' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
+				newLine.insertCell().innerHTML = '<input id="inputDetailsPosteId' + idUsed + '" type="number" value="' + posteId + '" oninput="modifyContractTime(' + id + ')" ' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
+				newLine.insertCell().innerHTML = '<textarea id="inputDetailsComment' + idUsed + '" oninput="modifyContractTime(' + id + ')" ' {% if not edit is defined %} + ' disabled'{% endif %} + '>' + comment + '</textarea>';
+				{% if edit is defined %}
+					newLine.insertCell().innerHTML = '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteContractTime(' + id + ')">';
+				{% endif %}
+			}
+
+			function addContractTime(contractId)
+			{
+				var beginDate = document.getElementById('inputDetailsBeginDate' + contractId).value,
+					endDate = document.getElementById('inputDetailsEndDate' + contractId).value,
+					amount = document.getElementById('inputDetailsAmount' + contractId).value,
+					buyId = document.getElementById('inputDetailsBuyId' + contractId).value,
+					marketId = document.getElementById('inputDetailsMarketId' + contractId).value,
+					commandId = document.getElementById('inputDetailsCommandId' + contractId).value,
+					posteId = document.getElementById('inputDetailsPosteId' + contractId).value,
+					comment = document.getElementById('inputDetailsComment' + contractId).value;
+				if(beginDate == '')
+                {
+                    alert("{{ aValueForBeginDateMustBeProvided|capitalize }}");
+                    return;
+                }
+				if(endDate == '')
+                {
+                    alert("{{ aValueForEndDateMustBeProvided|capitalize }}");
+                    return;
+                }
+				document.getElementById('inputDetailsBeginDate' + contractId).value = '';
+				document.getElementById('inputDetailsEndDate' + contractId).value = '';
+				document.getElementById('inputDetailsAmount' + contractId).value = ''; // maybe want by default keeping some fields from a contractTime to the other
+                document.getElementById('inputDetailsBuyId' + contractId).value = '';
+                document.getElementById('inputDetailsMarketId' + contractId).value = '';
+                document.getElementById('inputDetailsCommandId' + contractId).value = '';
+                document.getElementById('inputDetailsPosteId' + contractId).value = '';
+                document.getElementById('inputDetailsComment' + contractId).value = '';
+				modifyContractMetadata(contractId);
+				fetch("addContractTime/contractId=" + contractId + "/beginDate=" + beginDate + "/endDate=" + endDate + "/amount=" + amount + "/buyId=" + buyId + "/marketId=" + marketId + "/commandId=" + commandId + "/posteId=" + posteId + "/comment=" + comment + "/lookForId=" + lookForId).then(function(response)
+                {
+                    return response.text();
+                }).then(function(id)
+                {
+                    addContractTimeRow(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+                    addContractTimeData(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+                });
+			}
+
+			function entityFitsSortsByContractId(contractId) // can't use same function name with different arguments
+			{
+				var rowData = rowsData[getIndexById(contractId)];
+				if(rowData == undefined) return false;
+				var supplierId = rowData[3], applicativeLeaderId = rowData[6], active = rowData[8];
+				return entityFitsSorts(supplierId, applicativeLeaderId, active);
+			}
+
+			function entityFitsSorts(supplierId, applicativeLeaderId, active)
+			{
+				var activeRequired = document.getElementById('sortActive').checked;
+				if(activeRequired != active) return false;
+                var sortSupplier = document.getElementById('sortSupplier').value,
+					sortApplicativeLeader = document.getElementById('sortApplicativeLeader').value,
+					sortUnit = document.getElementById('sortUnit').value,
+					collaboratorsIndex = getIndexById(applicativeLeaderId, collaborators);
+				var collaborator = collaborators[collaboratorsIndex], unitId = collaborator[2];
+                if(sortSupplier != Number.MAX_SAFE_INTEGER && sortSupplier != supplierId) // there is also Number.MAX_NUMBER but value differs so let use the safest value
+                {
+                    return false;
+                }
+				if(sortUnit != Number.MAX_SAFE_INTEGER && sortUnit != unitId)
+				{
+					return false;
+				}
+                return sortApplicativeLeader == Number.MAX_SAFE_INTEGER || sortApplicativeLeader == applicativeLeaderId;
+			}
+
+			function getRealIndex(id)
+			{
+				var table = document.getElementById("table"), rows = table.rows, rowsLength = rows.length;
+				for(var rowsIndex = 0; rowsIndex < rowsLength; rowsIndex++)
+                {
+					var row = rows[rowsIndex];
+					if(row.id == 'details' + id)
+						return rowsIndex;
+				}
+			}
+
+			function addEntityRow(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId, resized = false)
+			{
+				if(!entityFitsSorts(supplierId, applicativeLeaderId, active)) return;
+				var table = document.getElementById("table"),
+                    details = document.getElementById("details" + id),
+				    tableDetailsIfAny = details == null ? Number.MAX_SAFE_INTEGER : getRealIndex(id),
+				    newLine = table.insertRow(tableDetailsIfAny == Number.MAX_SAFE_INTEGER ? {% if edit is defined %}table.rows.length - 1{% else %}-1{% endif %} : tableDetailsIfAny);
+                newLine.setAttribute("id", id);
+				newLine.setAttribute("class", "aRow");
+                newLine.insertCell().innerHTML = '<input id="inputNumber' + id + '" value="' + number + '" oninput="modifyEntity(' + id + ')" {% if not edit is defined %}disabled{% endif %}>';
+                newLine.insertCell().innerHTML = '<input id="inputDate' + id + '" type="date" value="' + date + '" disabled>';
+				addSelect(newLine, suppliers, supplierId, id, 'Supplier');
+				//newLine.insertCell().innerHTML = '<textarea id="inputContent' + id + '" oninput="modifyEntity(' + id + ')"{% if not edit is defined %} disabled{% endif %}>' + content + '</textarea>';
+				newLine.insertCell().innerHTML = '<input id="inputContent' + id + '" value="' + content + '" oninput="modifyEntity(' + id + ')"{% if not edit is defined %} disabled{% endif %}>';
+				addSelect(newLine, collaborators, leaderId, id, 'Leader');
+				addSelect(newLine, collaborators, applicativeLeaderId, id, 'ApplicativeLeader');
+				addSelect(newLine, domains, domainId, id, 'Domain');
+				addSelect(newLine, [[0, "{{ no }}"], [1, "{{ yes }}"]], active, id, 'Active');
+				newLine.insertCell().innerHTML = '<input id="inputModificationDate' + id + '" type="date" value="' + modificationDate + '" disabled>';
+				addSelect(newLine, users, modificationUserId, id, 'ModificationUser', true);
+	
+				{# if edit is defined #}
+					var actionsCell = newLine.insertCell();
+					actionsCell.innerHTML = `
+						<td>
+							<table class="noBorder">
+								{% if edit is defined %}
+								<td class="noBorder">
+								{% endif %}
+									<img src="res/edit.svg" title="{{ editMsg|capitalize }}" class="action" onclick="switchDetails(` + id + `)">
+								{% if edit is defined %}
+								</td>
+								<td class="noBorder">
+									<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(` + id + `)">
+								</td>
+								{% endif %}
+							</table>
+						</td>`;
+				{# endif #}
+
+				var detailsNode = document.getElementById('details' + id);
+				if(detailsNode == null)
+				{
+				var newLineDetails = table/*detailsNode*/.insertRow({% if edit is defined %}table.rows.length - 1{% endif %});
+				newLineDetails.id = "details" + id;
+				newLineDetails.classList.add('aDetails');
+				newLineDetails.style.visibility = 'hidden';
+				newLineDetails.style.position = 'absolute';
+				var detailsCell = newLineDetails.insertCell();
+				detailsCell.colSpan = {# if edit is defined #}11{# else #}10{# endif #};
+				detailsCell.innerHTML = `
+					<table id="table` + id + `">
+						<thead>
+							<th>{{ beginDate|capitalize }}</th>
+							<th>{{ endDate|capitalize }}</th>
+							<th>{{ amount|capitalize }}</th>
+							<th>{{ buyId|capitalize }}</th>
+							<th>{{ marketId|capitalize }}</th>
+							<th>{{ commandId|capitalize }}</th>
+							<th>{{ posteId|capitalize }}</th>
+							<th>{{ comment|capitalize }}</th>
+							{% if edit is defined %}
+								<th>{{ actions|capitalize }}</th>
+							{% endif %}
+						</thead>
+						<tbody id="tbody` + id + `">
+						{% if edit is defined %}
+						<tr>
+							<td><input id="inputDetailsBeginDate` + id + `" type="date"></td>
+							<td><input id="inputDetailsEndDate` + id + `" type="date"></td>
+							<td><input id="inputDetailsAmount` + id + `" type="number" min="0"></td>
+							<td><input id="inputDetailsBuyId` + id + `" type="string"></td>
+							<td><input id="inputDetailsMarketId` + id + `" type="number"></td>
+							<td><input id="inputDetailsCommandId` + id + `" type="number"></td>
+							<td><input id="inputDetailsPosteId` + id + `" type="number"></td>
+							<td><textarea id="inputDetailsComment` + id + `" type="string"></textarea></td>
+							{% if edit is defined %}
+								<td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addContractTime(` + id + `); /*document.getElementById('inputDetailsBeginDate` + id + `').focus();*/" class="action"/></td>
+							{% endif %}
+						</tr>
+						{% endif %}
+						</tbody>
+					</table>`;
+				}
+			}
+
+			function modifyEntityRow(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId)
+			{
+				document.getElementById('inputNumber' + id).value = number;
+				document.getElementById('inputDate' + id).value = date;
+				document.getElementById('inputSupplierId' + id).value = supplierId;
+				document.getElementById('inputContent' + id).value = content;
+				document.getElementById('inputLeaderId' + id).value = leaderId;
+				document.getElementById('inputApplicativeLeaderId' + id).value = applicativeLeaderId;
+				document.getElementById('inputDomainId' + id).value = domainId;
+				document.getElementById('inputActiveId' + id).value = active;
+				document.getElementById('inputModificationDate' + id).value = modificationDate;
+				document.getElementById('inputModificationUserId' + id).value = modificationUserId;
+			}
+
+			function modifyContractTimeRow(id, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment)
+            {
+                document.getElementById('inputDetailsBeginDate' + id).value = beginDate;
+                document.getElementById('inputDetailsEndDate' + id).value = endDate;
+                document.getElementById('inputDetailsAmount' + id).value = amount;
+                document.getElementById('inputDetailsBuyId' + id).value = buyId;
+                document.getElementById('inputDetailsMarketId' + id).value = marketId;
+                document.getElementById('inputDetailsCommandId' + id).value = commandId;
+                document.getElementById('inputDetailsPosteId' + id).value = posteId;
+                document.getElementById('inputDetailsComment' + id).value = comment;
+            }
+
+			function setSelectByText(id, text)
+			{
+				var dd = document.getElementById(id);
+                for(var i = 0; i < dd.options.length; i++)
+                {
+                    if(dd.options[i].text === text)
+                    {
+                        dd.selectedIndex = i;
+                        break;
+                    }
+                }
+			}
+
+			function modifyEntity(id)
+			{
+				modifyContractMetadata(id);
+				
+				var number = document.getElementById('inputNumber' + id).value,
+					date = document.getElementById('inputDate' + id).value,
+					supplierId = document.getElementById('inputSupplierId' + id).value,
+					content = document.getElementById('inputContent' + id).value,
+					leaderId = document.getElementById('inputLeaderId' + id).value,
+					applicativeLeaderId = document.getElementById('inputApplicativeLeaderId' + id).value,
+					domainId = document.getElementById('inputDomainId' + id).value,
+					active = document.getElementById('inputActiveId' + id).value,
+					modificationDate = document.getElementById('inputModificationDate' + id).value,
+					modificationUserId = document.getElementById('inputModificationUserId' + id).value;
+
+				var rowsDataIndex = getIndexById(id);
+				rowsData[rowsDataIndex] = [id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId];
+				recalculateRowsDataSorted();
+				if(!entityFitsSortsByContractId(id)) document.getElementById('details' + id).remove();
+				clearRows();
+                refreshDisplay();
+
+				loadURL("/modifyContract/id=" + id + '/number=' + number + '/date=' + date + '/supplierId=' + supplierId + '/content=' + content + '/leaderId=' + leaderId + '/applicativeLeaderId=' + applicativeLeaderId + '/domainId=' + domainId + '/active=' + active + '/modificationDate=' + modificationDate + '/modificationUserId=' + modificationUserId + '/lookForId=' + lookForId);
+			}
+			
+			function recalculateRowsDataSorted()
+			{
+				rowsDataSorted = [];
+				var rowsDataLength = rowsData.length;
+				for(var rowsDataIndex = 0; rowsDataIndex < rowsDataLength; rowsDataIndex++)
+				{
+					var data = rowsData[rowsDataIndex], supplierId = data[3], applicativeLeaderId = data[6], active = data[8];
+					if(entityFitsSorts(supplierId, applicativeLeaderId, active))
+						rowsDataSorted.push(data);
+				}
+			}
+
+			function refreshPagesCounter()
+			{
+				pagesCounter = getPageFromRowIndex(/*rowsData.length*/rowsDataSorted.length - 1);
+			}
+
+			function addEntity()
+			{
+				var number = document.getElementById("contract_number").value,
+					date = document.getElementById("contract_date").value,
+					supplierId = document.getElementById("contract_supplier_id").value,
+					name = document.getElementById("contract_content").value,
+					leaderId = document.getElementById("contract_contract_leader_id").value,
+					applicativeLeaderId = document.getElementById("contract_applicative_leader_id").value,
+					domainId = document.getElementById("contract_domain_id").value,
+					active = document.getElementById("contract_active").value,
+					modificationDate = document.getElementById('contract_modification_date').value,
+					modificationUserId = document.getElementById('contract_modification_user_id').value;
+					
+					if(supplierId == Number.MAX_SAFE_INTEGER)
+                	{
+                    	alert("{{ aValueForSupplierMustBeProvided|capitalize }}");
+                    	return;
+                	}
+					if(leaderId == Number.MAX_SAFE_INTEGER)
+                    {
+                        alert("{{ aValueForLeaderMustBeProvided|capitalize }}");
+                        return;
+                    }
+					if(applicativeLeaderId == Number.MAX_SAFE_INTEGER)
+                    {
+                        alert("{{ aValueForApplicativeLeaderMustBeProvided|capitalize }}");
+                        return;
+                    }
+					if(domainId == Number.MAX_SAFE_INTEGER)
+                    {
+                        alert("{{ aValueForDomainMustBeProvided|capitalize }}");
+                        return;
+                    }
+					if(active == Number.MAX_SAFE_INTEGER)
+                    {
+                        alert("{{ aValueForActiveMustBeProvided|capitalize }}");
+                        return;
+                    }
+
+					document.getElementById("contract_number").value = '';
+					document.getElementById("contract_content").value = '';
+					document.getElementById("contract_date").value = new Date().toISOString().slice(0, 10);
+					document.getElementById("contract_supplier_id").value = Number.MAX_SAFE_INTEGER;
+					document.getElementById("contract_contract_leader_id").value = Number.MAX_SAFE_INTEGER;
+					document.getElementById("contract_applicative_leader_id").value = Number.MAX_SAFE_INTEGER;
+					document.getElementById("contract_domain_id").value = Number.MAX_SAFE_INTEGER;
+					document.getElementById("contract_active").value = Number.MAX_SAFE_INTEGER;
+					fetch("addContract/number=" + number + "/date=" + date + "/supplierId=" + supplierId + "/content=" + name + "/leaderId=" + leaderId + "/applicativeLeaderId=" + applicativeLeaderId + "/domainId=" + domainId+ "/active=" + active + "/modificationDate=" + modificationDate + "/modificationUserId=" + modificationUserId + "/lookForId=" + lookForId).then(function(response)
+                	{
+                    	return response.text();
+                	}).then(function(id)
+					{
+						addEntityRow(id, number, date, supplierId, name, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId);
+						addEntityData(id, number, date, supplierId, name, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId);
+					});
+			}
+
+			function reverseString(s)
+			{
+				return s.split("").reverse().join("");
+			}
+
+			function isNumber(n)
+			{
+				return !isNaN(parseFloat(n)) && !isNaN(n - 0)
+			}
+
+			document.addEventListener("keyup", function(event)
+			{
+				if(event.keyCode === 13) // enter
+				{
+    				event.preventDefault();
+					var focusedElement = document.activeElement;
+					if(focusedElement == null || !focusedElement.id.includes('inputDetails'))
+						addEntity();
+					else
+					{
+						var id = focusedElement.id, idLength = id.length, numberStr = '';
+						for(var idIndex = 0; idIndex < idLength; idIndex++)
+						{
+							var char = id[idLength - idIndex - 1];
+							if(isNumber(char))
+								numberStr += char;
+							else
+								break;
+						}
+						addContractTime(reverseString(numberStr));
+					}
+  				}
+			});
+			
+			function getPageFromRowIndex(rowIndex)
+			{
+				var page = Math.ceil((rowIndex + 1) / entriesPerPage);
+                return page == 0 ? 1 : page;
+			}
+
+			function getCurrentPage()
+			{
+				return getPageFromRowIndex(firstRowIndex);
+			}
+
+			function refreshPageNumbering()
+			{
+				var currentPage = getCurrentPage();
+				refreshPagesCounter();
+				document.getElementsByClassName('previousPage')[0].style.visibility = currentPage == 1 ? 'hidden' : 'visible';
+				document.getElementsByClassName('nextPage')[0].style.visibility = pagesCounter > currentPage ? 'visible' : 'hidden';
+                document.getElementById('pageNumbering').innerHTML = currentPage + ' / ' + pagesCounter;
+			}
+
+			function refreshDisplay(resized = false, initialize = false)
+			{
+				for(var rowsDataIndex = firstRowIndex; rowsDataIndex < Math.min(firstRowIndex + entriesPerPage, rowsDataSorted.length); rowsDataIndex++)
+                {
+                    var data = rowsDataSorted[rowsDataIndex], id = data[0], number = data[1], date = data[2], supplierId = data[3], content = data[4], leaderId = data[5], applicativeLeaderId = data[6], domainId = data[7], active = data[8], modificationDate = data[9], modificationUserId = data[10];
+                    addEntityRow(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId, resized);
+                }
+				if(resized)
+				{
+					var rows = document.getElementsByClassName('aDetails'), rowsLength = rows.length;
+                    for(var rowsIndex = 0; rowsIndex < rowsLength; rowsIndex++)
+                    {
+                        var row = rows[rowsIndex], rowId = row.id.replace('details', '');
+						if(document.getElementById(rowId) == null)
+							row.remove();
+                    }
+				}
+				if(initialize)
+				{
+					for(var contractTimesIndex = 0; contractTimesIndex < contractTimes.length; contractTimesIndex++)
+                	{
+                    	var data = contractTimes[contractTimesIndex], id = data[0], contractId = data[1], beginDate = data[2], endDate = data[3], amount = data[4], buyId = data[5], marketId = data[6], commandId = data[7], posteId = data[8], comment = data[9];
+                    	addContractTimeRow(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+                	}
+				}
+			}
+
+			function clearRows()
+			{
+				var rows = document.getElementsByClassName('aRow'), rowsLength = rows.length;
+				
+				for(var rowsIndex = 0; rowsIndex < rowsLength; rowsIndex++)
+				{
+					rows[0].remove();
+				}
+			}
+
+			function clearContractTimeRows()
+			{
+				var rows = document.getElementsByClassName('aDetails'), rowsLength = rows.length;
+
+                for(var rowsIndex = 0; rowsIndex < rowsLength; rowsIndex++)
+                {
+                    rows[0].remove();
+                }
+			}
+
+			function onResize()
+			{
+				clearRows();
+				var table = document.getElementById('table'), row = table.insertRow(), inputEntity = document.createElement("INPUT");
+				row.insertCell().append(inputEntity);
+				var bcr = row.getBoundingClientRect();
+				row.remove();
+				var inputHeight = bcr.bottom - bcr.top + 1,
+					bcrUpload = document.getElementById('entitiesDownload').getBoundingClientRect(),
+					viewportHeight = Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000); // 10000 is a maximal screen width/height that noone is about to reach
+					inputFromTopAndBottom = bcrUpload.top;
+				entriesPerPage = Math.floor((viewportHeight - inputFromTopAndBottom) / inputHeight) - 1;
+				if(entriesPerPage <= 0) entriesPerPage = 1; // to always display something even if not enough space on screen
+				firstRowIndex = 0;
+
+				refreshDisplay(true);
+				refreshPageNumbering();
+			}
+
+			window.onresize = onResize;
+			
+			function previousPage()
+			{
+				clearRows();
+				firstRowIndex -= entriesPerPage;
+				refreshDisplay();
+				refreshPageNumbering();
+			}
+
+			function nextPage()
+			{
+				clearRows();
+				firstRowIndex += entriesPerPage;
+				refreshDisplay();
+				refreshPageNumbering();
+			}
+
+			function loadData(data, dataName)
+			{
+				var parts = data.split("\n"), partsLength = parts.length;
+                for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                {
+                	var part = parts[partsIndex], partParts = part.split("|"), partPartsLength = partParts.length;
+                    if(partPartsLength >= 2)
+                    {
+                    	var id = partParts[0], name = partParts[1];
+						if(partPartsLength >= 3)
+							window[dataName].push([id, name, partParts[2]]);
+						else
+                       		window[dataName].push([id, name]);
+                    }
+                }
+			}
+
+			function loadSort(id) // Supplier for instance
+			{
+				document.getElementById('sort' + id).options[0] = new Option("{{ allOf|capitalize }}", Number.MAX_SAFE_INTEGER);
+                var elementsIndex = 1, elements = window[id == 'ApplicativeLeader' ? 'collaborators' : id.toLowerCase() + 's'];
+                elements.forEach(idName => document.getElementById('sort' + id).options[elementsIndex++] = new Option(idName[1], idName[0]));
+			}
+
+			function updateSort()
+			{
+				clearRows();
+				clearContractTimeRows();
+				firstRowIndex = 0; // come back on first page (especially if not enough rows to fill more than a page)
+				recalculateRowsDataSorted();
+				refreshDisplay(false, true);
+				refreshPageNumbering();
+			}
+
+			window.addEventListener('load', function ()
+			{
+				{% if edit is defined %}
+					setSelectByText('contract_modification_user_id', "{{ userId }}");
+				{% endif %}
+				fetch("/suppliersData").then(function(responseSuppliers) // maybe could parallelize this in order to make it being ready to work faster
+				{
+					return responseSuppliers.text();
+				}).then(function (htmlSuppliers)
+				{
+					fetch("/collaboratorsData").then(function(responseCollaborators)
+                	{
+                    	return responseCollaborators.text();
+                	}).then(function (htmlCollaborators)
+                	{
+						fetch("/domainsData").then(function(responseDomains)
+                		{
+                    		return responseDomains.text();
+                		}).then(function (htmlDomains)
+                		{
+							fetch("/usersData").then(function(responseUsers)
+                        	{
+                            	return responseUsers.text();
+                        	}).then(function (htmlUsers)
+                        	{
+								fetch("/contractTimesData").then(function(responseContractTimes)
+                				{
+                    				return responseContractTimes.text();
+                				}).then(function (htmlContractTimes)
+                				{
+									fetch("/unitsData").then(function(responseUnits)
+                                	{
+                                    	return responseUnits.text();
+                                	}).then(function (htmlUnits)
+                                	{
+										loadData(htmlSuppliers, "suppliers");
+										loadData(htmlCollaborators, "collaborators");
+										loadData(htmlDomains, "domains");
+										loadData(htmlUsers, "users");
+										loadData(htmlUnits, "units");
+
+										loadSort('Supplier');
+										loadSort('ApplicativeLeader');
+										loadSort('Unit');
+
+										onWindowLoad(htmlContractTimes);
+									});
+								});
+							});
+						});
+					});
+				});
+			});	
+
+			function onWindowLoad(htmlContractTimes)
+			{
+				onResize();
+				lookForId = generateRandomString(16);
+				fetch("/contractsData").then(function(response)
+                {
+                    return response.text();
+                }).then(function (html)
+                {
+                    {
+					if(html != '')
+					{
+                        var parts = html.split("\n"), partsLength = parts.length;
+                        for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                        {   
+                            var part = parts[partsIndex], partParts = part.split('|'), id = partParts[0], number = partParts[1], date = partParts[2], supplierId = partParts[3], content = partParts[4], leaderId = partParts[5], applicativeLeaderId = partParts[6], domainId = partParts[7], active = partParts[8], modificationDate = partParts[9], modificationUserId = partParts[10];
+                            rowsData.push([id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId]);
+                        }
+						recalculateRowsDataSorted();
+					}
+						if(htmlContractTimes != '')
+                    	{
+                    		var parts = htmlContractTimes.split("\n"), partsLength = parts.length;
+                        	for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                        	{
+                        		var part = parts[partsIndex], partParts = part.split('|'), id = partParts[0], contractId = partParts[1], beginDate = partParts[2], endDate = partParts[3], amount = partParts[4], buyId = partParts[5], marketId = partParts[6], commandId = partParts[7], posteId = partParts[8], comment = partParts[9];
+                            	contractTimes.push([id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment]);
+                        	}
+                    	}
+						refreshDisplay(false, true);
+                		refreshPageNumbering();
+                		loadURL("/declare/" + lookForId);
+                		(function lookForNewContent()
+                		{
+                    		fetch("/lookFor/" + lookForId).then(function(response)
+                    		{
+                        		return response.text();
+                    		}).then(function (html)
+                    		{
+                        		if(html != "")
+                        		{
+                            		var parts = html.split("\\n"), partsLength = parts.length;
+                            		for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                            		{
+                                		var part = parts[partsIndex], action = part[0];
+                                		if(action == 'c')
+										{
+											part = part.replace('cT', '');
+											action = part[0];
+											if(action == '-')
+                                            {
+                                                var id = part.slice(1);
+                                                deleteContractTime(id, false);
+                                            }
+                                            else if(action == '+' || action == '_')
+                                            {
+                                                var part = part.slice(1), partParts = part.split('|'), id = partParts[0], contractId = partParts[1], beginDate = partParts[2], endDate = partParts[3], amount = partParts[4], buyId = partParts[5], marketId = partParts[6], commandId = partParts[7], posteId = partParts[8], comment = partParts[9];
+                                                if(action == '+')
+                                                {
+                                                    if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
+                                                        addContractTimeRow(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+                                                    addContractTimeData(id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+                                                }
+                                                else if(action == '_')
+                                                {
+													var contractTimesIndex = getIndexByContractTimeId(id);
+													modifyContractTimeRow(id, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment);
+													contractTimes[contractTimesIndex] = [id, contractId, beginDate, endDate, amount, buyId, marketId, commandId, posteId, comment]; // could have used dict instead of array ^^'
+                                                }
+                                            }
+										}
+										else
+										{
+											if(action == '*')
+                                        	{
+                                            	document.location.reload();
+                                        	}
+                                        	else if(action == '-')
+                                			{
+                                    			var id = part.slice(1);
+                                    			deleteEntity(id, false);
+                                			}
+                                			else if(action == '+' || action == '_')
+                                			{
+                                    			var part = part.slice(1), partParts = part.split('|'), id = partParts[0], number = partParts[1], date = partParts[2], supplierId = partParts[3], content = partParts[4], leaderId = partParts[5], applicativeLeaderId = partParts[6], domainId = partParts[7], active = partParts[8], modificationDate = partParts[9], modificationUserId = partParts[10]; // could check length
+												if(action == '+')
+												{
+													addEntityData(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId, true);
+													recalculateRowsDataSorted();
+													if(getCurrentPage() == pagesCounter && getRowsCount() - 1 < entriesPerPage)
+                                                        addEntityRow(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId);
+												}
+                                    			else if(action == '_')
+												{
+													var rowsDataIndex = getIndexById(id);
+													if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
+													{
+                                        				modifyEntityRow(id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId);
+													}
+													rowsData[rowsDataIndex] = [id, number, date, supplierId, content, leaderId, applicativeLeaderId, domainId, active, modificationDate, modificationUserId];
+												}
+											}
+                                		}
+                            		}
+                        		}
+                        		lookForNewContent();
+                    		}).catch(function(error) {}); // likewise no error on website tab switch etc
+                		})();
+                    }
+				});
+			}
+		</script>
+		<h1 class="title">{{ contractsTab|capitalize }}</h1>
+		<div id="pagination"><div id="insidePagination">
+			<div style="padding-bottom: 10px; text-align: center;">
+				<img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
+				<h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
+				<img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
+			</div>
+			<table>
+				<thead>
+					<tr style="white-space: nowrap;">
+						<th>
+							<table class="noBorder">
+							<td class="noBorder">
+                        		{{ number|capitalize }}
+                            </td>
+                            <td class="noBorder">
+                            	<img src="res/question_mark.svg" title="{{ numberHelp|capitalize }}" id="help"/>
+                            </td>
+							</table>
+						{% set columns = ['date', 'supplier', 'content', 'leader', 'applicative_leader', 'domain', 'active', 'modification_date', 'modification_user_id'] %}
+        				{% for column in columns %}
+						<th>
+							<table class="noBorder">
+							<td class="noBorder">{{ attribute(_context, column)|capitalize }}</td>
+							<td class="noBorder"><img src="res/question_mark.svg" title="{{ attribute(_context, column ~ 'Help')|capitalize }}" id="help"/></td>
+							</table>
+						</th>
+						{% endfor %}
+						{# if edit is defined #}
+							<th>{{ actions|capitalize }}</th>
+						{# endif #}
+					</tr>
+					<tr>
+						<td></td>
+						<td></td>
+						<td><select id="sortSupplier" oninput="updateSort();" style="text-align-last: center;"></td>
+						<td></td>
+						<td></td>
+						<td style="text-align: center;"><select id="sortApplicativeLeader" oninput="updateSort();" style="text-align-last: center;"></select><select id="sortUnit" oninput="updateSort();" style="text-align-last: center;"></select></td>
+						<td></td>
+						<td style="text-align: center;"><input type="checkbox" id="sortActive" oninput="updateSort();" checked></td>
+						<td></td>
+						<td></td>
+						<td></td>
+					</tr>
+				</thead>
+				<tbody id="table">
+					{% if edit is defined %}
+						<tr id="inputEntityRow">
+							{{ form_start(form, { 'attr': { 'novalidate': 'novalidate', 'class': 'col-lg-5' }}) }}
+								<td>{{ form_row(form.number) }}</td>
+								<td>{{ form_row(form.date) }}</td>
+								<td>{{ form_row(form.supplier_id) }}</td>
+								<td>{{ form_row(form.content) }}</td>
+								<td>{{ form_row(form.contract_leader_id) }}</td>
+								<td>{{ form_row(form.applicative_leader_id) }}</td>
+								<td>{{ form_row(form.domain_id) }}</td>
+								<td>{{ form_row(form.active) }}</td>
+								<td>{{ form_row(form.modification_date) }}</td>
+								<td>{{ form_row(form.modification_user_id) }}</td>
+								<td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addEntity(); document.getElementById('contract_number').focus();" class="action"/></td>
+							{{ form_end(form) }}
+						</tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div></div><br/><br/>
+		<!--<button type="button" style="margin-top: 2%;" id="entitiesDownload" onclick="location.href = 'contractsDownload';">{{ download }}</button><br/><br/>-->
+		<form action="contractsUpload" method="post" enctype="multipart/form-data">
+			<a href="contractsDownload"><img src="res/download.svg" title="{{ download }}" id="entitiesDownload" class="downupload"/></a>
+			{% if manage is defined %}
+				<input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
+				<img src="res/upload.svg" id="fileToUpload" title="{{ upload }}" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
+				<input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
+			{% endif %}
+		</form>
+		</div></div>
+	</body>
+</html>

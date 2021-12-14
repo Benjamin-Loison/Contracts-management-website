@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+		<title>{{ collaboratorsTab|capitalize }}</title>
+    </head>
+    <body>
+		{% include 'menu.html.twig' %}
+		<div style="zoom: 175%;">
+		<script>
+			function getViewportHeight()
+            {
+                return Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000) / 1.75;
+            }
+
+			function deleteEntity(id, send = true)
+			{
+				if(send)
+				{
+					fetch('deleteCollaborator/' + id + '/' + lookForId).then(function(response)
+                	{
+                   		return response.text();
+                	}).then(function(html)
+                	{
+						if(html == 'N')
+						{
+							alert("{{ deletionCouldntBePerformedBecauseUsedInAContract|capitalize|raw }}");
+							return;
+						}
+						deleteEntityReal(id, send);
+                	});
+				}
+				else
+					deleteEntityReal(id, send);
+			}
+
+			var units = [];
+
+			function addEntityData(id, name, unitId, received)
+			{
+				rowsData.push([id, name, unitId]);
+				if(getRowsCount() == entriesPerPage + 1 && !received)
+                {
+                    clearRows();
+                    if(getCurrentPage() == pagesCounter)
+                        pagesCounter++;
+                    firstRowIndex += (pagesCounter - getCurrentPage()) * entriesPerPage;
+					refreshDisplay();
+                }
+                refreshPageNumbering();
+			}
+
+			function addEntityRow(id, name, unitId)
+			{
+				var table = document.getElementById("table"), newLine = table.insertRow({% if edit is defined %}table.rows.length - 1{% endif %});
+                newLine.setAttribute("id", id);
+				newLine.setAttribute("class", "aRow");
+                newLine.insertCell().innerHTML = '<input id="input' + id + '" value="' + name + '" oninput="modifyEntity(' + id + ')"' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
+
+				var options = '';
+                for(var unitsIndex = 0; unitsIndex < units.length; unitsIndex++)
+                {
+                    var unit = units[unitsIndex], ide = unit[0], name = unit[1];
+                    options += '<option value="' + ide + '"' + (ide == unitId ? ' selected' : '') + '>' + name + '</option>';
+                }
+                var disabledStr = "{% if not edit is defined %} disabled{% else %}{% endif %}";
+                newLine.insertCell().innerHTML = '<select id="inputUnitId' + id + '" oninput="modifyEntity(' + id + ')"' + disabledStr + '>' + options + '</select>';
+
+				{% if edit is defined %}
+                	newLine.insertCell().innerHTML = '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(' + id + ')"/>';
+				{% endif %}
+			}
+
+			function modifyEntityRow(id, name, unitId)
+			{
+				document.getElementById('input' + id).value = name;
+				document.getElementById('inputUnitId' + id).value = unitId;
+			}
+
+			function modifyEntity(id)
+			{
+				var name = document.getElementById('input' + id).value, unitId = document.getElementById('inputUnitId' + id).value;
+				loadURL("/modifyCollaborator/" + id + '/' + name + "/" + unitId + "/" + lookForId);
+			}
+
+			// if try empty and then an already used name the second error message isn't displayed
+			function addEntity()
+			{
+				var name = document.getElementById("collaborator_name").value, unitId = document.getElementById("collaborator_unit_id").value;
+				if(unitId == Number.MAX_SAFE_INTEGER)
+				{
+					alert("{{ aValueForUnitMustBeProvided|capitalize|raw }}");
+					return;
+				}
+                if(name != "")
+				{
+					for(var rowsDataIndex = 0; rowsDataIndex < rowsData.length; rowsDataIndex++)
+					{
+						if(rowsData[rowsDataIndex][1] == name)
+						{
+							if(!warning)
+							{
+								var table = document.getElementById("table");
+                    			inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
+                    			table.rows[table.rows.length - 1].cells[0].prepend('{{ name_already_typed }}');
+								warning = true;
+							}
+							return;
+						}
+					}
+					if(warning)
+					{
+						var table = document.getElementById("table");
+						table.rows[table.rows.length - 1].cells[0].innerHTML = inputBackup;
+						document.getElementById('collaborator_name').focus();
+						warning = false;
+					}
+					document.getElementById("collaborator_name").value = '';
+					fetch("addCollaborator/" + name + "/" + unitId + "/" + lookForId).then(function(response)
+                	{
+                    	return response.text();
+                	}).then(function(id)
+					{
+						addEntityRow(id, name, unitId);
+						addEntityData(id, name, unitId);
+					});
+				}
+				else if(!warning)
+				{
+					var table = document.getElementById("table");
+					inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
+					table.rows[table.rows.length - 1].cells[0].prepend('{{ name_cant_be_null }}');
+					warning = true;
+				}
+			}
+
+			document.addEventListener("keyup", onKeyUp);
+
+			window.onresize = onResize;
+
+			window.addEventListener('load', function ()
+			{
+				onResize();
+				lookForId = generateRandomString(16);
+				fetch("/collaboratorsData").then(function(response)
+                {
+                    return response.text();
+                }).then(function (html)
+                {
+					fetch("/unitsData").then(function(responseUnits)
+                    {
+                        return responseUnits.text();
+                    }).then(function (htmlUnits)
+                    {
+						if(htmlUnits != '')
+						{
+							var parts = htmlUnits.split("\n"), partsLength = parts.length;
+							for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+							{
+								var part = parts[partsIndex], partParts = part.split("|"), partPartsLength = partParts.length;
+								if(partPartsLength >= 2)
+								{
+									var id = partParts[0], name = partParts[1];
+									units.push([id, name]);
+								}
+							}
+						}
+						if(html != '')
+						{
+							var parts = html.split("\n"), partsLength = parts.length;
+							for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+							{   
+								var part = parts[partsIndex], partParts = part.split('|'), id = partParts[0], name = partParts[1], unitId = partParts[2];
+								rowsData.push([id, name, unitId]);
+							}
+						}
+						refreshDisplay();
+                		refreshPageNumbering();
+                		loadURL("/declare/" + lookForId);
+                		(function lookForNewContent()
+                		{
+                    		fetch("/lookFor/" + lookForId).then(function(response)
+                    		{
+                        		return response.text();
+                    		}).then(function (html)
+                    		{
+                        		if(html != "")
+                        		{
+                            		var parts = html.split("\\n"), partsLength = parts.length;
+                            		for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                            		{
+                                		var part = parts[partsIndex], action = part[0];
+                                		if(action == '*')
+                                        {
+                                            document.location.reload();
+                                        }
+                                        else if(action == '-')
+                                		{
+                                    		var id = part.slice(1);
+                                    		deleteEntity(id, false);
+                                		}
+                                		else if(action == '+' || action == '_')
+                                		{
+                                    		var part = part.slice(1), partParts = part.split('|'), id = partParts[0], name = partParts[1], unitId = partParts[2];
+                                    		if(action == '+')
+											{
+                                        		if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
+													addEntityRow(id, name, unitId);
+												addEntityData(id, name, unitId, true);
+											}
+                                    		else if(action == '_')
+											{
+												var rowsDataIndex = getIndexById(id);
+												if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
+												{
+                                        			modifyEntityRow(id, name, unitId);
+												}
+												rowsData[rowsDataIndex] = [id, name, unitId];
+											}
+                                		}
+                            		}
+                        		}
+                        		lookForNewContent();
+                    		}).catch(function(error) {}); // likewise no error on website tab switch etc
+                		})();
+                    });
+                });
+			})
+		</script>
+		<h1 class="title">{{ currentTab |capitalize }}</h1>
+		<div id="pagination"><div id="insidePagination">
+			<div style="padding-bottom: 10px; text-align: center;">
+				<img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
+				<h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
+				<img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>{{ collaborator|capitalize }}</th>
+						<th>{{ unit|capitalize }}</th>
+						{% if edit is defined %}
+							<th>{{ actions|capitalize }}</th>
+						{% endif %}
+					</tr>
+				</thead>
+				<tbody id="table">
+					{% if edit is defined %}
+						<tr id="inputEntityRow">
+							<td>{{ form_row(form.name, {'value': ''}) }}</td>
+							<td>{{ form_row(form.unit_id, {'value': ''}) }}</td>
+							<td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addEntity()" class="action"/></td>
+						</tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div></div><br/><br/>
+		<form action="collaboratorsUpload" method="post" enctype="multipart/form-data">
+				<a href="collaboratorsDownload"><img src="res/download.svg" title="{{ download }}" id="entitiesDownload" class="downupload"/></a>
+			{% if manage is defined %}
+				<input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
+				<img src="res/upload.svg" title="{{ upload }}" id="fileToUpload" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
+				<input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
+			{% endif %}
+		</form>
+		</div></div>
+		</div>
+	</body>
+</html>

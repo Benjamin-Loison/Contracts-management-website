@@ -1,0 +1,226 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[left=1cm, right=1cm, top=1cm, bottom=2cm]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\newcommand{\projectName}{BOSE\ }
+\newcommand{\projectNameLowerCase}{bose}
+
+\lstset{basicstyle=\ttfamily,
+  literate={projectNameLowerCase} {$\projectNameLowerCase$}{1},
+  literate={~} {$\sim$}{1},
+  showstringspaces=false,
+  commentstyle=\color{red},
+  keywordstyle=\color{blue}
+}
+
+\begin{document}
+
+	\title{\Huge{\textbf{Documentation technique \projectName}}}
+	\date{\vspace{-5ex}14 juin 2021}
+	\maketitle
+
+	\setlength{\parindent}{0cm}
+	
+	\tableofcontents
+	
+	\newpage
+	
+	\section{Introduction}
+	
+	Le site web \projectName associée à la gestion des contrats utilise en \textbf{PhP 8} le framework \textbf{Symfony 5}. Il peut notamment utiliser comme système de gestion de base de données \textbf{MySQL} ou \textbf{MariaDB}.\\
+	Ce site utilise pour l'authentification ADFS la \textbf{librairie SimpleSAMLPhP} (celle-ci est directement intégrée au projet). Aucun paramètre PhP n'est à modifier pour le bon fonctionnement du site. L'interaction multi-utilisateurs est permise grâce à l'utilisation abondante d'AJAX (JavaScript).\\
+	Ce site a été conçu pour fonctionner parfaitement en plein écran (avec un écran de résolution classique 1920x1080) dans un seul onglet du navigateur \textbf{Microsoft Edge}.\\ % Il est recommandé de modifier les contrats un par un.
+	Une attention particulière a été portée sur le fait qu'aucun chemin absolu ne soit utilisé (même au sein de la configuration de SimpleSAMLPhP) permettant une installation rapide n'importe où dans l'arborescence du disque du serveur.\\
+	Dans la suite du document on supposera l'installation faite dans le dossier d'un utilisateur du serveur:
+	\begin{lstlisting}[language=bash]
+	~/bose/
+	\end{lstlisting}
+	
+	\section{Installation}
+	
+	Le dossier à mettre "en ligne" par le serveur HTTP est le dossier $\sim$\verb{/bose/public{\\
+	L'utilisation de SimpleSAMLPhP nécessite l'usage uniquement du HTTPS sur le site.\\
+	
+	En accord avec la documentation de SimpleSAMLPhP (disponible notamment ici: \href{https://simplesamlphp.org/docs/stable/}{https://simplesamlphp.org/docs/stable/}):\\
+	
+	Le dossier \verb{/var/simplesamlphp/www/{ doit être disponible via l'URL \verb{https://site-de-bose.fr/simplesaml{ et la variable d'environnement SIMPLESAMLPHP\_CONFIG\_DIR doit être configurée à \verb{/var/simplesamlphp/config{, cela se fait par exemple dans la configuration d'apache2 par:
+	
+	\begin{verbatim}
+		SetEnv SIMPLESAMLPHP_CONFIG_DIR /var/simplesamlphp/config
+		Alias /simplesaml /var/simplesamlphp/www
+		
+		<Directory /home/debian/bose/simplesamlphp/www>
+        <IfModule mod_authz_core.c>
+            Require all granted
+        </IfModule>
+    </Directory>
+		
+		<Directory /home/debian/bose/public>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+	\end{verbatim}
+	
+	Le dernier bloc "Directory" peut être nécessaire au bon fonctionnement d'Apache2 avec le site.\\
+	La configuration officielle de SimpleSAMLPhP pour:\\
+	\begin{enumerate}
+		\item Apache2: \href{https://simplesamlphp.org/docs/stable/simplesamlphp-install#section\_5}{https://simplesamlphp.org/docs/stable/simplesamlphp-install#section\_5}
+		\item Nginx: \href{https://simplesamlphp.org/docs/stable/simplesamlphp-install#section\_6}{https://simplesamlphp.org/docs/stable/simplesamlphp-install#section\_6}
+	\end{enumerate}
+	
+	Afin de faire fonctionner SimpleSAMLPhP avec ADFS je recommende de suivre ce tutoriel précis: \href{https://www.lewisroberts.com/2015/09/06/integrating-simplesamlphp-with-adfs-2012r2/}{https://www.lewisroberts.com/2015/09/06/integrating-simplesamlphp-with-adfs-2012r2/}
+		
+	L'ajout de l'administrateur initial peut se faire en basculant temporairement sur "true" la booléenne "accessForEveryone" de \verb{src/Controller/HomeController.php{.\\
+	
+	Afin de faire fonctionner la déconnexion, il faut modifier l'URL de déconnexion associée au fournisseur d'identité (Identity Provider) écrite dans la variable globale "logoutURL" du fichier \verb{src/Controller/HomeController.php{.\\
+	En cas de problème avec la déconnexion, le code y étant associé est la fonction nommée "logout" dans\\
+	\verb{src/Controller/HomeController.php{.
+			
+	\section{Configuration}
+	
+	\subsection{Email}
+	
+	A la racine du site, dans le fichier \textbf{.env}, la ligne associée à \textbf{MAILER\_DSN} permet de configurer l'adresse email d'émission des rappels de renouvellement de contrats.\\
+	Le format est le suivant:
+	\begin{verbatim}
+	MAILER_DSN=smtp://email@bose.fr:motDePasse@smtp.bose.fr:SMTPPort
+	\end{verbatim}
+	
+	Le contenu des emails envoyés automatiquement peut être édité dans \verb{src/Command/EmailNotifierSendCommand.php{ à la ligne 125.\\
+	L'envoi des emails peut, si nécessaire, être effectuée à la main en éxécutant:
+	
+	\begin{lstlisting}[language=bash]
+		~/bose$ php bin/console app:email-notifier:send
+	\end{lstlisting}
+	
+	Afin d'automatiser l'envoi (tous les jours à 8h00), il faut rajouter dans le crontab:
+	
+	\begin{lstlisting}
+		0 8 * * * cd ~/bose/ && php bin/console app:email-notifier:send
+	\end{lstlisting}
+	
+	Pour éditer le nombre de jours entre l'envoi de l'email de rappel et la date d'expiration cela se fait sur le menu "Administration".
+	
+	\subsection{Base de données}
+	
+	A la racine du site, dans le fichier \textbf{.env}, la ligne associée à \textbf{DATABASE\_URL} permet de configurer la base de données utilisée.\\
+	Le format est le suivant:
+	\begin{verbatim}
+	DATABASE_URL="mysql://utilisateur:motDePasse@adresseIP:port/table?serverVersion=13&charset=utf8"
+	\end{verbatim}
+	Une fois configurée, pour construire la base de données, il faut utiliser la commande
+	\begin{lstlisting}[language=bash]
+		~/bose$ php bin/console doctrine:schema:create
+	\end{lstlisting}
+	
+	\subsection{Nom du site}
+	
+	Hormis les quelques occurences du nom du projet dans ce document, les autres se situent dans le nom du dossier du site, dans \verb{src/Command/EmailNotifierSendCommand.php{ et sur le logo du site stocké dans \verb{public/res/logo.png{
+	
+	\subsection{Aide à la saisie}
+	
+	Les tooltips aidant l'utilisateur à insérer ou éditer un contrat sont éditables dans le fichier \verb{translations/messages.fr.yaml{
+	
+	\subsection{Téléversement de contenu}
+	
+	Le téléversement de données ne vérifie pas l'existence des données sous-jacentes (téléverse un collaborateur lié à une unité n'existant pas, ne la crée pas). De plus le téléversement écrase entièrement les données précédemments présentes associées à/aux table/s.\\
+	De la même manière téléverser une table fille implique la suppression des tables mères dépendant d'elle (par exemple téléverser la table unité, supprime les collaborateurs et les contrats).\\
+	Il est donc recommendé de procéder à un téléversement global sur le panneau de bord ou à un téléversement méthodique dans l'ordre des enfants puis des parents (pour téléverser la table collaborateurs il faut d'abord téléverser celles des unités si celle-ci n'est pas à jour puis enfin on peut téléverser celle des collaborateurs).\\
+	Pour un téléversement de chaque table à la main il est donc recommendé de suivre un ordre comme le suivant: fournisseurs, unités, collaborateurs, domaines, emails, utilisateurs et contrats
+	
+	\subsection{Points à vérifier après déploiement}
+	
+	Après installation et configuration les points suivants peuvent être vérifiés pour s'assurer du bon fonctionnement de l'entièreté du site:\
+	
+	\begin{enumerate}
+		\item L'accès au site avec ADFS
+		\item La langue sur le site est correcte (français)
+		\item Les pages suivantes sont accessibles pour un utilisateur administrateur: accueil, contrats (et formulaire de saisie d'un contrat), paramétrage (fournisseurs, unités, collaborateurs et domaines) et administration (et logs et emails)
+		\item Les pages suivantes sont accessibles pour un utilisateur éditeur ou consulteur: accueil, contrats, paramétrage (fournisseurs, unités, collaborateurs et domaines)
+		\item Vérifier l'accès en lecture seul d'un utilisateur consulteur et vérifier le non accès aux fonctions d'administrations ("/admin")
+		\item Vérifier la possibilité pour un utilisateur contributeur de modifier les données et vérifier le non accès aux fonctions d'administrations ("/admin")
+		\item Ouvrir dans deux onglets une table de données (contrats, fournisseurs, unités, collaborateurs, domaines ou emails) et vérifier que les changements d'un onglet se répercutent bien automatiquement sur l'autre sans recharger la page (et aussi vérifier qu'en rechargeant la page toutes les données ont bien été sauvegardées)
+		\item Vérifier le téléchargement et le téléversement des données du site et d'une table de données
+		\item Vérifier le fonctionnement des filtres sur le panneau de bord et sur les contrats
+		\item Vérifier qu'un contrat arrivant à expiration (la date de d'expiration doit être de moins que le nombre de jours avant envoi d'un email) dans ce cas ce contrat doit être afficher dans le widget "Contrats à renouveller" sur le panneau de bord
+		\item Vérifier le fonctionnement des logs et des backups en téléchargeant un CSV par exemple
+		\item Vérifier le fonctionnement de l'envoi des emails en définissant un contrat qui expire exactement dans n jours, avec $n$ le nombre de jours entre l'envoi de l'email de rappel et la date d'expiration (pour tester facilement, utiliser la valeur 1 (rappel avant l'expiration le lendemain)), défini dans l'onglet Administration, dans ce cas la commande:\\
+		
+			\begin{lstlisting}[language=bash, gobble=24]
+				~/bose$ php bin/console app:email-notifier:send
+			\end{lstlisting}
+			
+			procède à l'envoi. Pour tester le bon fonctionnement de la tâche planifiée avec crontab vous pouvez attendre le prochain 8h00 du matin (cependant il faut bien faire attention qu'un email ne sera envoyé que si à 8h00 du matin le contrat expire dans $n$ jours) où pour vérifier simplement que le crontab fonctionne bien vous pouvez changer temporairement:\
+			
+			\begin{lstlisting}[gobble=24]
+				0 8 * * * cd ~/bose/ && php bin/console app:email-notifier:send
+			\end{lstlisting}
+			
+			en:\\
+			
+			\begin{lstlisting}[gobble=24]
+				* * * * * cd ~/bose/ && php bin/console app:email-notifier:send
+			\end{lstlisting}
+			
+			Pour qu'à chaque minute un email soit envoyé si un contrat expire dans $n$ jours.
+			
+		\item Vérifier le fonctionnement du bouton "Déconnexion"
+		
+	\end{enumerate}
+		
+	Dans le cas de l'apparition d'un problème sur un des points précédents, vérifier les permissions des fichiers du dossier du site. Je recommende un accès complet au groupe associé au serveur web avec par exemple:\\
+	\begin{lstlisting}[language=bash]
+	chmod 770 ~/bose -R && chown debian:www-data ~/bose -R
+	\end{lstlisting}
+	Un problème lié aux points ci-dessus peut être dû à un problème dans les fichiers du dossier \verb{private/{
+		
+	\section{Code}
+	
+	Le code modifié à partir du framework Symfony est dans les dossiers:
+	
+	\begin{itemize}
+		\item \verb{private/{ fichiers utilisées pour le bon fonctionnement du site: sauvegardes, journaux et utilisateurs connectés (pour l'aspect multi-utilisateurs)
+		\item \verb{public/{ ce dossier est accessible en ligne, il contient notamment les images vectorielles utilisées sur le site
+		\item \verb{src/{ dossier principale contenant le code du site
+			\begin{itemize}
+				\item \verb{Command/{ commande relative à l'envoi des emails de rappels
+				\item \verb{Controller/{ fichier principal s'occupant de tout le \textbf{back-end} (PhP), il organise la réponse HTTP à la demande d'une URL donnée
+				\item \verb{Entity/{ description des attributs et méthodes des objets utilisés (collaborateur, contrat, période de contrat, domaine, email, section, service, fournisseur, utilisateur)
+				\item \verb{Form/{ description du formulaire pour insérer dans la base de données de nouvelles instances d'objets
+			\end{itemize}
+		\item \verb{templates/{ fichiers Twig générant le \textbf{front-end} (HTML, CSS et JavaScript) distribué à l'utilisateur final
+		\item \verb{translations/{ traduction française (le code original est intégralement réalisé en anglais)
+	\end{itemize}
+	
+	\textbf{Le téléversement vers le site de CSV supprime les anciennes entrées} des tables associées et peut donc détruire des liens avec d'autres entitées (téléversez des nouveaux fournisseurs va corrompre tous les contrats utilisant les anciens). Il est recommandé de n'utiliser la fonction de téléversement qu'une unique fois pour établir les données du site et de manière ordonnée (d'abord les fournisseurs puis les contrats et non l'inverse par exemple). Dans tous les cas le dossier \verb{private/backups/{ contient une sauvegarde automatique.\\
+	
+	Les journaux sont archivés dans un fichier séparé à chaque nouveau Mo de journaux rempli (dans \verb{private/logs/{).\\
+	
+	\textbf{Tout changement du code source implique la réapparition de l'incompatibilité de SimpleSAMLPhP} ne supportant que Twig 2 (et non Twig 3) suivante:\\
+	
+	\includegraphics[width=\linewidth]{bug.jpg}
+	
+	Etrangement \textbf{cette erreur se résoud simplement en vidant le cache de Symfony} avec la commande:\\
+	\begin{lstlisting}[language=bash]
+		~/bose$ php bin/console cache:clear
+	\end{lstlisting}
+	
+	Toutes les pages du site ont été conçues dans l'optique de ne pas à avoir à utiliser la barre de défilement, sauf pour les journaux et les contrats si on affiche le détails (les périodes) de ceux-ci.\\
+	
+	Un administrateur ne peut pas éditer son propre profil (afin d'éviter tout retrait accidentel), il faut qu'un autre administrateur l'édite à sa place.\\
+		
+	\subsection{Débogage}
+	
+	Le débogage peut être facilité par l'utilisation de la \textbf{"toolbar"} qui est activable dans \verb{config/packages/dev/web_profiler.yaml{\\
+	
+	%Afin d'avoir des logs plus fine avec aussi les actions des utilisateurs qui ne changent pas les données (comme le chargement d'une page), cette option peut s'activer en basculant la variable booléenne alsoLogNonEditingActions à true dans \verb{src/Controller/HomeController.php{
+
+\end{document}

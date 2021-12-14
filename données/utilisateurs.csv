@@ -1,0 +1,5 @@
+﻿utilisateurs
+"id utilisateur","niveau de permission","date de création","date de fin de droit",actif
+0,administrateur,13/06/2021,13/06/2050,oui
+1,contributeur,13/06/2021,13/06/2050,oui
+2,consulteur,13/06/2021,13/06/2050,oui
