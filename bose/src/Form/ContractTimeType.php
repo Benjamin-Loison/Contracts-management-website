@@ -16,14 +16,14 @@ class ContractTimeType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-			->add('beginDate', DateType::class, array('label' => false))
-			->add('endDate', DateType::class, array('label' => false))
-			->add('amount', NumberType::class, array('label' => false))
-			->add('buyId', null, array('label' => false)) // null means default string
-			->add('marketId', NumberType::class, array('label' => false))
-			->add('commandId', NumberType::class, array('label' => false))
-			->add('posteId', NumberType::class, array('label' => false))
-			->add('comment', TextareaType::class, array('label' => false))
+            ->add('beginDate', DateType::class, array('label' => false))
+            ->add('endDate', DateType::class, array('label' => false))
+            ->add('amount', NumberType::class, array('label' => false))
+            ->add('buyId', null, array('label' => false)) // null means default string
+            ->add('marketId', NumberType::class, array('label' => false))
+            ->add('commandId', NumberType::class, array('label' => false))
+            ->add('posteId', NumberType::class, array('label' => false))
+            ->add('comment', TextareaType::class, array('label' => false))
         ;
     }
     

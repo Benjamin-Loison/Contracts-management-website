@@ -1,230 +1,230 @@
 <!DOCTYPE html>
 <html lang="fr">
     <head>
-		<title>{{ tabName|capitalize }}</title>
+        <title>{{ tabName|capitalize }}</title>
     </head>
     <body>
-		{% include 'menu.html.twig' %}
-		<div style="zoom: 175%;">
-		<script>
-			function getViewportHeight()
-    		{
-        		return Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000) / 1.75;
-    		}
+        {% include 'menu.html.twig' %}
+        <div style="zoom: 175%;">
+        <script>
+            function getViewportHeight()
+            {
+                return Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000) / 1.75;
+            }
 
-			function deleteEntity(id, send = true)
-			{
-				if(send)
-				{
-					fetch("delete{{ entity|capitalize }}/" + id + "/" + lookForId).then(function(response)
-                	{
-                   		return response.text();
-                	}).then(function(html)
-                	{
-						if(html == 'N')
-						{
-							alert("{{ deletionCouldntBePerformedBecauseUsedInAContract|capitalize|raw }}");
-							return;
-						}
-						deleteEntityReal(id, send);
-                	});
-				}
-				else
-					deleteEntityReal(id, send);
-			}
+            function deleteEntity(id, send = true)
+            {
+                if(send)
+                {
+                    fetch("delete{{ entity|capitalize }}/" + id + "/" + lookForId).then(function(response)
+                    {
+                        return response.text();
+                    }).then(function(html)
+                    {
+                        if(html == 'N')
+                        {
+                            alert("{{ deletionCouldntBePerformedBecauseUsedInAContract|capitalize|raw }}");
+                            return;
+                        }
+                        deleteEntityReal(id, send);
+                    });
+                }
+                else
+                    deleteEntityReal(id, send);
+            }
 
-			function addEntityData(id, name, received)
-			{
-				rowsData.push([id, name]);
-				if(getRowsCount() == entriesPerPage + 1 && !received)
+            function addEntityData(id, name, received)
+            {
+                rowsData.push([id, name]);
+                if(getRowsCount() == entriesPerPage + 1 && !received)
                 {
                     clearRows();
                     if(getCurrentPage() == pagesCounter)
                         pagesCounter++;
                     firstRowIndex += (pagesCounter - getCurrentPage()) * entriesPerPage;
-					refreshDisplay();
+                    refreshDisplay();
                 }
                 refreshPageNumbering();
-			}
+            }
 
-			function addEntityRow(id, name)
-			{
-				var table = document.getElementById("table"), newLine = table.insertRow({% if edit is defined %}table.rows.length - 1{% endif %});
+            function addEntityRow(id, name)
+            {
+                var table = document.getElementById("table"), newLine = table.insertRow({% if edit is defined %}table.rows.length - 1{% endif %});
                 newLine.setAttribute("id", id);
-				newLine.setAttribute("class", "aRow");
+                newLine.setAttribute("class", "aRow");
                 newLine.insertCell().innerHTML = '<input id="input' + id + '" value="' + name + '" oninput="modifyEntity(' + id + ')"' {% if not edit is defined %} + ' disabled'{% endif %} + '>';
-				{% if edit is defined %}
-                	newLine.insertCell().innerHTML = '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(' + id + ')"/>';
-				{% endif %}
-			}
+                {% if edit is defined %}
+                    newLine.insertCell().innerHTML = '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(' + id + ')"/>';
+                {% endif %}
+            }
 
-			function modifyEntityRow(id, name)
-			{
-				document.getElementById('input' + id).value = name;
-			}
+            function modifyEntityRow(id, name)
+            {
+                document.getElementById('input' + id).value = name;
+            }
 
-			function modifyEntity(id)
-			{
-				var name = document.getElementById('input' + id).value;
-				loadURL("/modify{{ entity|capitalize }}/" + id + '/' + name + "/" + lookForId);
-			}
+            function modifyEntity(id)
+            {
+                var name = document.getElementById('input' + id).value;
+                loadURL("/modify{{ entity|capitalize }}/" + id + '/' + name + "/" + lookForId);
+            }
 
-			function addEntity()
-			{
-				var name = document.getElementById("{{ entity }}_name").value;
+            function addEntity()
+            {
+                var name = document.getElementById("{{ entity }}_name").value;
                 if(name != "")
-				{
-					for(var rowsDataIndex = 0; rowsDataIndex < rowsData.length; rowsDataIndex++)
-					{
-						if(rowsData[rowsDataIndex][1] == name)
-						{
-							if(!warning)
-							{
-								var table = document.getElementById("table");
-                    			inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
-                    			table.rows[table.rows.length - 1].cells[0].prepend('{{ name_already_typed }}');
-								warning = true;
-							}
-							return;
-						}
-					}
-					if(warning)
-					{
-						var table = document.getElementById("table");
-						table.rows[table.rows.length - 1].cells[0].innerHTML = inputBackup;
-						document.getElementById('{{ entity }}_name').focus();
-						warning = false;
-					}
-					document.getElementById("{{ entity }}_name").value = '';
-					fetch("add{{ entity|capitalize }}/" + name + "/" + lookForId).then(function(response)
-                	{
-                    	return response.text();
-                	}).then(function(id)
-					{
-						addEntityRow(id, name);
-						addEntityData(id, name);
-					});
-				}
-				else if(!warning)
-				{
-					var table = document.getElementById("table");
-					inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
-					table.rows[table.rows.length - 1].cells[0].prepend('{{ name_cant_be_null }}');
-					warning = true;
-				}
-			}
-			
-			document.addEventListener("keyup", onKeyUp);
+                {
+                    for(var rowsDataIndex = 0; rowsDataIndex < rowsData.length; rowsDataIndex++)
+                    {
+                        if(rowsData[rowsDataIndex][1] == name)
+                        {
+                            if(!warning)
+                            {
+                                var table = document.getElementById("table");
+                                inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
+                                table.rows[table.rows.length - 1].cells[0].prepend('{{ name_already_typed }}');
+                                warning = true;
+                            }
+                            return;
+                        }
+                    }
+                    if(warning)
+                    {
+                        var table = document.getElementById("table");
+                        table.rows[table.rows.length - 1].cells[0].innerHTML = inputBackup;
+                        document.getElementById('{{ entity }}_name').focus();
+                        warning = false;
+                    }
+                    document.getElementById("{{ entity }}_name").value = '';
+                    fetch("add{{ entity|capitalize }}/" + name + "/" + lookForId).then(function(response)
+                    {
+                        return response.text();
+                    }).then(function(id)
+                    {
+                        addEntityRow(id, name);
+                        addEntityData(id, name);
+                    });
+                }
+                else if(!warning)
+                {
+                    var table = document.getElementById("table");
+                    inputBackup = table.rows[table.rows.length - 1].cells[0].innerHTML;
+                    table.rows[table.rows.length - 1].cells[0].prepend('{{ name_cant_be_null }}');
+                    warning = true;
+                }
+            }
+            
+            document.addEventListener("keyup", onKeyUp);
 
-			window.onresize = onResize;
+            window.onresize = onResize;
 
-			window.addEventListener('load', function ()
-			{
-				onResize();
-				lookForId = generateRandomString(16);
-				fetch("/{{ entity }}sData").then(function(response)
+            window.addEventListener('load', function ()
+            {
+                onResize();
+                lookForId = generateRandomString(16);
+                fetch("/{{ entity }}sData").then(function(response)
                 {
                     return response.text();
                 }).then(function (html)
                 {
                     {
-					if(html != '')
-					{
+                    if(html != '')
+                    {
                         var parts = html.split("\n"), partsLength = parts.length;
                         for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
                         {   
                             var part = parts[partsIndex], partParts = part.split('|'), id = partParts[0], name = partParts.slice(1).join('|');
                             rowsData.push([id, name]);
                         }
-					}
-						refreshDisplay();
-                		refreshPageNumbering();
-                		loadURL("/declare/" + lookForId);
-                		(function lookForNewContent()
-                		{
-                    		fetch("/lookFor/" + lookForId).then(function(response)
-                    		{
-                        		return response.text();
-                    		}).then(function (html)
-                    		{
-                        		if(html != "")
-                        		{
-                            		var parts = html.split("\\n"), partsLength = parts.length;
-                            		for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
-                            		{
-                                		var part = parts[partsIndex], action = part[0];
-                                		if(action == '*')
+                    }
+                        refreshDisplay();
+                        refreshPageNumbering();
+                        loadURL("/declare/" + lookForId);
+                        (function lookForNewContent()
+                        {
+                            fetch("/lookFor/" + lookForId).then(function(response)
+                            {
+                                return response.text();
+                            }).then(function (html)
+                            {
+                                if(html != "")
+                                {
+                                    var parts = html.split("\\n"), partsLength = parts.length;
+                                    for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                                    {
+                                        var part = parts[partsIndex], action = part[0];
+                                        if(action == '*')
                                         {
                                             document.location.reload();
                                         }
                                         else if(action == '-')
-                                		{
-                                    		var id = part.slice(1);
-                                    		deleteEntity(id, false);
-                                		}
-                                		else if(action == '+' || action == '_')
-                                		{
-                                    		var part = part.slice(1), partParts = part.split('|'), id = partParts[0], name = partParts.slice(1).join('|');
-                                    		if(action == '+')
-											{
-                                        		if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
-													addEntityRow(id, name);
-												addEntityData(id, name, true);
-											}
-                                    		else if(action == '_')
-											{
-												var rowsDataIndex = getIndexById(id);
-												if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
-												{
-                                        			modifyEntityRow(id, name);
-												}
-												rowsData[rowsDataIndex] = [id, name];
-											}
-                                		}
-                            		}
-                        		}
-                        		lookForNewContent();
-                    		}).catch(function(error) {}); // likewise no error on website tab switch etc
-                		})();
+                                        {
+                                            var id = part.slice(1);
+                                            deleteEntity(id, false);
+                                        }
+                                        else if(action == '+' || action == '_')
+                                        {
+                                            var part = part.slice(1), partParts = part.split('|'), id = partParts[0], name = partParts.slice(1).join('|');
+                                            if(action == '+')
+                                            {
+                                                if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
+                                                    addEntityRow(id, name);
+                                                addEntityData(id, name, true);
+                                            }
+                                            else if(action == '_')
+                                            {
+                                                var rowsDataIndex = getIndexById(id);
+                                                if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
+                                                {
+                                                    modifyEntityRow(id, name);
+                                                }
+                                                rowsData[rowsDataIndex] = [id, name];
+                                            }
+                                        }
+                                    }
+                                }
+                                lookForNewContent();
+                            }).catch(function(error) {}); // likewise no error on website tab switch etc
+                        })();
                     }
                 });
-			})
-		</script>
-		<h1 class="title">{{ currentTab |capitalize }}</h1>
-		<div id="pagination"><div id="insidePagination">
-			<div style="padding-bottom: 10px; text-align: center;">
-				<img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
-				<h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
-				<img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
-			</div>
-			<table>
-				<thead>
-					<tr>
-						<th>{{ entityName|capitalize }}</th>
-						{% if edit is defined %}
-							<th>{{ actions|capitalize }}</th>
-						{% endif %}
-					</tr>
-				</thead>
-				<tbody id="table">
-					{% if edit is defined %}
-						<tr id="inputEntityRow">
-							<td>{{ form_row(form.name, {'value': ''}) }}</td>
-							<td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addEntity()" class="action"/></td>
-						</tr>
-					{% endif %}
-				</tbody>
-			</table>
-		</div></div><br/><br/>
-		<form action="{{ entity }}sUpload" method="post" enctype="multipart/form-data">
-			<a href="{{ entity }}sDownload"><img src="res/download.svg" title="{{ download|capitalize }}" id="entitiesDownload" class="downupload"/></a>
-			{% if manage is defined %}
-				<input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
-				<img src="res/upload.svg" id="fileToUpload" title="{{ upload|capitalize }}" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
-				<input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
-			{% endif %}
-		</form>
-		</div></div>
-		</div>
-	</body>
+            })
+        </script>
+        <h1 class="title">{{ currentTab |capitalize }}</h1>
+        <div id="pagination"><div id="insidePagination">
+            <div style="padding-bottom: 10px; text-align: center;">
+                <img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
+                <h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
+                <img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ entityName|capitalize }}</th>
+                        {% if edit is defined %}
+                            <th>{{ actions|capitalize }}</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody id="table">
+                    {% if edit is defined %}
+                        <tr id="inputEntityRow">
+                            <td>{{ form_row(form.name, {'value': ''}) }}</td>
+                            <td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addEntity()" class="action"/></td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div></div><br/><br/>
+        <form action="{{ entity }}sUpload" method="post" enctype="multipart/form-data">
+            <a href="{{ entity }}sDownload"><img src="res/download.svg" title="{{ download|capitalize }}" id="entitiesDownload" class="downupload"/></a>
+            {% if manage is defined %}
+                <input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
+                <img src="res/upload.svg" id="fileToUpload" title="{{ upload|capitalize }}" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
+                <input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
+            {% endif %}
+        </form>
+        </div></div>
+        </div>
+    </body>
 </html>

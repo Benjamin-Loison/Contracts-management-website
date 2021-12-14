@@ -1,272 +1,272 @@
 <!DOCTYPE html>
 <html lang="fr">
     <head>
-		<title>{{ adminTab|capitalize }}</title>
-		<style>
-			#button
-			{
-				background-color: #409EFE;
-				border: none;
-				color: white;
-  				padding: 15px 32px;
-  				text-align: center;
-  				text-decoration: none;
-  				display: inline-block;
-				cursor: pointer;
-			}
+        <title>{{ adminTab|capitalize }}</title>
+        <style>
+            #button
+            {
+                background-color: #409EFE;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                cursor: pointer;
+            }
 
-			.bigger
-			{
-				padding-bottom: min(2vh, 10px);
-				padding-top: min(2vh, 10px);
-				margin-top: 0px;
-				margin-bottom: 0px;
-				font-size: large;
-				font-weight: bold;
-			}
-		</style>
+            .bigger
+            {
+                padding-bottom: min(2vh, 10px);
+                padding-top: min(2vh, 10px);
+                margin-top: 0px;
+                margin-bottom: 0px;
+                font-size: large;
+                font-weight: bold;
+            }
+        </style>
     </head>
     <body>
-		{% include 'menu.html.twig' %}
-		<div style="zoom: 175%;">
-		<script>
-			function getViewportHeight()
+        {% include 'menu.html.twig' %}
+        <div style="zoom: 175%;">
+        <script>
+            function getViewportHeight()
             {
                 return Math.min(document.documentElement.clientHeight || 10000, window.innerHeight || 10000) / 1.75;
             }
 
-			function deleteEntity(id, send = true)
-			{
-				if(send)
-				{
-					fetch("deleteUser/" + id + '/' + lookForId);
-				}
-				deleteEntityReal(id, send);
-			}
+            function deleteEntity(id, send = true)
+            {
+                if(send)
+                {
+                    fetch("deleteUser/" + id + '/' + lookForId);
+                }
+                deleteEntityReal(id, send);
+            }
 
-			var permissionLevels = ["{{ viewer }}", "{{ editor }}", "{{ administrator }}"];
+            var permissionLevels = ["{{ viewer }}", "{{ editor }}", "{{ administrator }}"];
 
-			function addEntityData(id, userId, permissionLevel, creationDate, expirationDate, received)
-			{
-				rowsData.push([id, userId, permissionLevel, creationDate, expirationDate]);
-				if(getRowsCount() == entriesPerPage + 1 && !received)
+            function addEntityData(id, userId, permissionLevel, creationDate, expirationDate, received)
+            {
+                rowsData.push([id, userId, permissionLevel, creationDate, expirationDate]);
+                if(getRowsCount() == entriesPerPage + 1 && !received)
                 {
                     clearRows();
                     if(getCurrentPage() == pagesCounter)
                         pagesCounter++;
                     firstRowIndex += (pagesCounter - getCurrentPage()) * entriesPerPage;
-					refreshDisplay();
+                    refreshDisplay();
                 }
                 refreshPageNumbering();
-			}
+            }
 
-			function dateToInt(date) // format: 2050-06-09
-			{
-				return parseInt(date.replaceAll('-', ''));
-			}
+            function dateToInt(date) // format: 2050-06-09
+            {
+                return parseInt(date.replaceAll('-', ''));
+            }
 
-			function isBefore(date0, date1)
-			{
-				return dateToInt(date0) <= dateToInt(date1);
-			}
+            function isBefore(date0, date1)
+            {
+                return dateToInt(date0) <= dateToInt(date1);
+            }
 
-			function addEntityRow(id, userId, permissionLevel, creationDate, expirationDate)
-			{
-				var table = document.getElementById("table"), newLine = table.insertRow(table.rows.length - 1);
+            function addEntityRow(id, userId, permissionLevel, creationDate, expirationDate)
+            {
+                var table = document.getElementById("table"), newLine = table.insertRow(table.rows.length - 1);
                 newLine.setAttribute("id", id);
-				newLine.setAttribute("class", "aRow");
-				var isMyself = userId === "{{ userId }}"; // otherwise problem with empty string
+                newLine.setAttribute("class", "aRow");
+                var isMyself = userId === "{{ userId }}"; // otherwise problem with empty string
                 newLine.insertCell().innerHTML = '<input id="inputUserId' + id + '" value="' + userId + '" oninput="modifyEntity(' + id + ')"' + (isMyself ? ' disabled' : '') + '>';
-				var options = '';
-				for(var permissionLevelsIndex = 0; permissionLevelsIndex < permissionLevels.length; permissionLevelsIndex++)
+                var options = '';
+                for(var permissionLevelsIndex = 0; permissionLevelsIndex < permissionLevels.length; permissionLevelsIndex++)
                 {
                     var permissionLevelName = permissionLevels[permissionLevelsIndex];
                     options += '<option value="' + permissionLevelsIndex + '"' + (permissionLevelsIndex == permissionLevel ? ' selected' : '') + '>' + permissionLevelName + '</option>';
                 }
-				newLine.insertCell().innerHTML = '<select id="inputPermissionLevel' + id + '" oninput="modifyEntity(' + id + ')"' + (isMyself ? ' disabled' : '') + '>'  + options + '</select>';
-				newLine.insertCell().innerHTML = '<input id="inputCreationDate' + id + '" type="date" value="' + creationDate + '" disabled>';
-				newLine.insertCell().innerHTML = '<input id="inputExpirationDate' + id + '" type="date" value="' + expirationDate + '" oninput="modifyEntity(' + id + ')" ' + (isMyself ? ' disabled' : '') + '>';
-				// we assume that this website isn't used at 00:00 when a user expirates...
+                newLine.insertCell().innerHTML = '<select id="inputPermissionLevel' + id + '" oninput="modifyEntity(' + id + ')"' + (isMyself ? ' disabled' : '') + '>'  + options + '</select>';
+                newLine.insertCell().innerHTML = '<input id="inputCreationDate' + id + '" type="date" value="' + creationDate + '" disabled>';
+                newLine.insertCell().innerHTML = '<input id="inputExpirationDate' + id + '" type="date" value="' + expirationDate + '" oninput="modifyEntity(' + id + ')" ' + (isMyself ? ' disabled' : '') + '>';
+                // we assume that this website isn't used at 00:00 when a user expirates...
 
-				var currentDate = new Date().toISOString().slice(0, 10), active = isBefore(currentDate, expirationDate);
-				newLine.insertCell().innerHTML = '<select id="inputActive' + id + '" disabled><option value="0" ' + (active ? 'selected="selected"' : '') + '>{{ yes }}</option><option value="1" ' + (active ? '' : 'selected="selected"') + '>{{ no }}</option></select>';
-               	
-				newLine.insertCell().innerHTML = isMyself ? '' : '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(' + id + ')"/>';
-			}
+                var currentDate = new Date().toISOString().slice(0, 10), active = isBefore(currentDate, expirationDate);
+                newLine.insertCell().innerHTML = '<select id="inputActive' + id + '" disabled><option value="0" ' + (active ? 'selected="selected"' : '') + '>{{ yes }}</option><option value="1" ' + (active ? '' : 'selected="selected"') + '>{{ no }}</option></select>';
+                
+                newLine.insertCell().innerHTML = isMyself ? '' : '<img src="res/cross.svg" title="{{ delete|capitalize }}" class="action" onclick="deleteEntity(' + id + ')"/>';
+            }
 
-			function modifyEntityRow(id, userId, permissionLevel, creationDate, expirationDate)
-			{
-				document.getElementById('inputUserId' + id).value = userId;
-				document.getElementById('inputPermissionLevel' + id).value = permissionLevel;
-				document.getElementById('inputCreationDate' + id).value = creationDate;
-				document.getElementById('inputExpirationDate' + id).value = expirationDate;
-				refreshActive(id);
-			}
+            function modifyEntityRow(id, userId, permissionLevel, creationDate, expirationDate)
+            {
+                document.getElementById('inputUserId' + id).value = userId;
+                document.getElementById('inputPermissionLevel' + id).value = permissionLevel;
+                document.getElementById('inputCreationDate' + id).value = creationDate;
+                document.getElementById('inputExpirationDate' + id).value = expirationDate;
+                refreshActive(id);
+            }
 
-			function refreshActive(id)
-			{
-				var currentDate = new Date().toISOString().slice(0, 10), expirationDate = document.getElementById('inputExpirationDate' + id).value, active = isBefore(currentDate, expirationDate);
-				document.getElementById('inputActive' + id).value = active ? 0 : 1;
-			}
+            function refreshActive(id)
+            {
+                var currentDate = new Date().toISOString().slice(0, 10), expirationDate = document.getElementById('inputExpirationDate' + id).value, active = isBefore(currentDate, expirationDate);
+                document.getElementById('inputActive' + id).value = active ? 0 : 1;
+            }
 
-			function modifyEntity(id)
-			{
-				var userIdInput = document.getElementById('inputUserId' + id), userIdRaw = userIdInput.value, userId = userIdRaw, permissionLevel = document.getElementById('inputPermissionLevel' + id).value, creationDate = document.getElementById('inputCreationDate' + id).value, expirationDate = document.getElementById('inputExpirationDate' + id).value;
-				refreshActive(id);
-				loadURL("/modifyUser/" + id + '/' + userId + '/' + permissionLevel + '/' + creationDate + '/' + expirationDate + '/' + lookForId);
-			}
+            function modifyEntity(id)
+            {
+                var userIdInput = document.getElementById('inputUserId' + id), userIdRaw = userIdInput.value, userId = userIdRaw, permissionLevel = document.getElementById('inputPermissionLevel' + id).value, creationDate = document.getElementById('inputCreationDate' + id).value, expirationDate = document.getElementById('inputExpirationDate' + id).value;
+                refreshActive(id);
+                loadURL("/modifyUser/" + id + '/' + userId + '/' + permissionLevel + '/' + creationDate + '/' + expirationDate + '/' + lookForId);
+            }
 
-			function addUser()
-			{
-				var userId = document.getElementById("user_userId").value, permissionLevel = document.getElementById("user_permissionLevel").value, creationDate = document.getElementById('user_creationDate').value, expirationDate = document.getElementById('user_expirationDate').value;
-				if(permissionLevel == Number.MAX_SAFE_INTEGER)
+            function addUser()
+            {
+                var userId = document.getElementById("user_userId").value, permissionLevel = document.getElementById("user_permissionLevel").value, creationDate = document.getElementById('user_creationDate').value, expirationDate = document.getElementById('user_expirationDate').value;
+                if(permissionLevel == Number.MAX_SAFE_INTEGER)
                 {
                     alert("{{ aValueForPermissionLevelMustBeProvided|capitalize }}");
                     return;
                 }
-				if(expirationDate == '')
+                if(expirationDate == '')
                 {
                     alert("{{ aValueForExpirationDateMustBeProvided|capitalize }}");
                     return;
                 }
-				document.getElementById("user_userId").value = '';
-				fetch("addUser/" + userId + '/' + permissionLevel + '/' + creationDate + '/' + expirationDate + '/' + lookForId).then(function(response)
+                document.getElementById("user_userId").value = '';
+                fetch("addUser/" + userId + '/' + permissionLevel + '/' + creationDate + '/' + expirationDate + '/' + lookForId).then(function(response)
                 {
-                   	return response.text();
+                    return response.text();
                 }).then(function(id)
-				{
-					addEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
-					addEntityData(id, userId, permissionLevel, creationDate, expirationDate);
-				});
-			}
+                {
+                    addEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
+                    addEntityData(id, userId, permissionLevel, creationDate, expirationDate);
+                });
+            }
 
-			document.addEventListener("keyup", onKeyUp);
+            document.addEventListener("keyup", onKeyUp);
 
-			window.onresize = onResize;
-			
-			function updateDate()
-			{
-				var expirationDate = document.getElementById('user_expirationDate').value, currentDate = new Date().toISOString().slice(0, 10), active = isBefore(currentDate, expirationDate);
-				document.getElementById('user_active').value = active ? "0" : "1";
-			}
+            window.onresize = onResize;
+            
+            function updateDate()
+            {
+                var expirationDate = document.getElementById('user_expirationDate').value, currentDate = new Date().toISOString().slice(0, 10), active = isBefore(currentDate, expirationDate);
+                document.getElementById('user_active').value = active ? "0" : "1";
+            }
 
-			function updateDaysBeforeMail()
-			{
-				loadURL('updateDaysBeforeMail/' + document.getElementById('daysBeforeMail').value);
-			}
+            function updateDaysBeforeMail()
+            {
+                loadURL('updateDaysBeforeMail/' + document.getElementById('daysBeforeMail').value);
+            }
 
-			window.addEventListener('load', function ()
-			{
-				document.getElementById('user_active').value = 1;
-				onResize();
-				lookForId = generateRandomString(16);
-				fetch("/usersData").then(function(response)
+            window.addEventListener('load', function ()
+            {
+                document.getElementById('user_active').value = 1;
+                onResize();
+                lookForId = generateRandomString(16);
+                fetch("/usersData").then(function(response)
                 {
                     return response.text();
                 }).then(function (html)
                 {
-					if(html != '')
-					{
+                    if(html != '')
+                    {
                         var parts = html.split("\n"), partsLength = parts.length;
                         for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
                         {   
                             var part = parts[partsIndex], partParts = part.split('|'), id = partParts[0], userId = partParts[1], permissionLevel = partParts[2], creationDate = partParts[3], expirationDate = partParts[4];
                             rowsData.push([id, userId, permissionLevel, creationDate, expirationDate]);
                         }
-					}
-					refreshDisplay();
-					refreshPageNumbering();
-					loadURL("/declare/" + lookForId);
-					(function lookForNewContent()
-					{
-						fetch("/lookFor/" + lookForId).then(function(response)
-						{
-							return response.text();
-						}).then(function (html)
-						{
-							if(html != "")
-							{
-								var parts = html.split("\\n"), partsLength = parts.length;
-								for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
-								{
-									var part = parts[partsIndex], action = part[0];
-									if(action == '*')
-									{
-										document.location.reload(); // could do it smoother but that would be quite heavy
-									}
-									else if(action == '-')
-									{
-										var id = part.slice(1);
-										deleteEntity(id, false);
-									}
-									else if(action == '+' || action == '_')
-									{
-										var part = part.slice(1), partParts = part.split('|'), id = partParts[0], userId = partParts[1], permissionLevel = partParts[2], creationDate = partParts[3], expirationDate = partParts[4];
-										if(action == '+')
-										{
-											if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
-												addEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
-											addEntityData(id, userId, permissionLevel, creationDate, expirationDate, true);
-										}
-										else if(action == '_')
-										{
-											var rowsDataIndex = getIndexById(id);
-											if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
-											{
-												modifyEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
-											}
-											rowsData[rowsDataIndex] = [id, userId, permissionLevel, creationDate, expirationDate];
-										}
-									}
-								}
-							}
-							lookForNewContent();
-						}).catch(function(error) {}); // likewise no error on website tab switch etc
-					})();
+                    }
+                    refreshDisplay();
+                    refreshPageNumbering();
+                    loadURL("/declare/" + lookForId);
+                    (function lookForNewContent()
+                    {
+                        fetch("/lookFor/" + lookForId).then(function(response)
+                        {
+                            return response.text();
+                        }).then(function (html)
+                        {
+                            if(html != "")
+                            {
+                                var parts = html.split("\\n"), partsLength = parts.length;
+                                for(var partsIndex = 0; partsIndex < partsLength; partsIndex++)
+                                {
+                                    var part = parts[partsIndex], action = part[0];
+                                    if(action == '*')
+                                    {
+                                        document.location.reload(); // could do it smoother but that would be quite heavy
+                                    }
+                                    else if(action == '-')
+                                    {
+                                        var id = part.slice(1);
+                                        deleteEntity(id, false);
+                                    }
+                                    else if(action == '+' || action == '_')
+                                    {
+                                        var part = part.slice(1), partParts = part.split('|'), id = partParts[0], userId = partParts[1], permissionLevel = partParts[2], creationDate = partParts[3], expirationDate = partParts[4];
+                                        if(action == '+')
+                                        {
+                                            if(getCurrentPage() == pagesCounter && getRowsCount() < entriesPerPage)
+                                                addEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
+                                            addEntityData(id, userId, permissionLevel, creationDate, expirationDate, true);
+                                        }
+                                        else if(action == '_')
+                                        {
+                                            var rowsDataIndex = getIndexById(id);
+                                            if(firstRowIndex <= rowsDataIndex && rowsDataIndex < firstRowIndex + entriesPerPage)
+                                            {
+                                                modifyEntityRow(id, userId, permissionLevel, creationDate, expirationDate);
+                                            }
+                                            rowsData[rowsDataIndex] = [id, userId, permissionLevel, creationDate, expirationDate];
+                                        }
+                                    }
+                                }
+                            }
+                            lookForNewContent();
+                        }).catch(function(error) {}); // likewise no error on website tab switch etc
+                    })();
                 });
-			})
-		</script>
-		<h1 class="title">{{ adminTab|capitalize }}</h1>
+            })
+        </script>
+        <h1 class="title">{{ adminTab|capitalize }}</h1>
 
-		<label class="bigger">{{ daysBeforeMail|capitalize }}:&nbsp;</label><input type="number" min="0" value="{{ daysBeforeMailValue }}" id="daysBeforeMail" oninput="updateDaysBeforeMail();" class="bigger"><br/><br/>
+        <label class="bigger">{{ daysBeforeMail|capitalize }}:&nbsp;</label><input type="number" min="0" value="{{ daysBeforeMailValue }}" id="daysBeforeMail" oninput="updateDaysBeforeMail();" class="bigger"><br/><br/>
 
-		<div id="pagination"><div id="insidePagination">
-			<div style="padding-bottom: 10px; text-align: center;">
-				<img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
-				<h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
-				<img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
-			</div>
-			<table>
-				<thead>
-					<tr>
-						<th>{{ user|capitalize}}</th>
-						<th>{{ permissionLevel|capitalize }}</th>
-						<th>{{ creationDate|capitalize }}</th>
-						<th>{{ expirationDate|capitalize }}</th>
-						<th>{{ active|capitalize }}</th>
-						<th>{{ actions|capitalize }}</th>
-					</tr>
-				</thead>
-				<tbody id="table">
-					<tr id="inputEntityRow">
-						<td>{{ form_row(form.userId) }}</td>
-						<td>{{ form_row(form.permissionLevel) }}</td>
-						<td>{{ form_row(form.creationDate) }}</td>
-						<td oninput="updateDate();">{{ form_row(form.expirationDate) }}</td>
-						<td><select id="user_active" disabled><option value="0">{{ yes }}</option><option value="1">{{ no }}</option></select></td>
-						<td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addUser()" class="action"/></td>
-					</tr>
-				</tbody>
-			</table>
-		</div></div><br/><br/>
-	
-		<form action="usersUpload" method="post" enctype="multipart/form-data">
-			<a href="usersDownload"><img src="res/download.svg" title="{{ download }}" id="entitiesDownload" class="downupload"/></a>
-			<input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
-			<img src="res/upload.svg" title="{{ upload }}" id="fileToUpload" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
-			<input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
-		</form>
-		</div></div>
-		</div>
-	</body>
+        <div id="pagination"><div id="insidePagination">
+            <div style="padding-bottom: 10px; text-align: center;">
+                <img src="res/previous.svg" title="{{ previousPage|capitalize }}" id="pageSwitch" class="previousPage" style="visibility: hidden;" onclick="previousPage()">
+                <h1 style="display: inline; margin-left: 25px; margin-right: 25px;" id="pageNumbering">1 / 1</h1>
+                <img src="res/next.svg" title="{{ nextPage|capitalize }}" id="pageSwitch" class="nextPage" style="visibility: hidden;" onclick="nextPage()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ user|capitalize}}</th>
+                        <th>{{ permissionLevel|capitalize }}</th>
+                        <th>{{ creationDate|capitalize }}</th>
+                        <th>{{ expirationDate|capitalize }}</th>
+                        <th>{{ active|capitalize }}</th>
+                        <th>{{ actions|capitalize }}</th>
+                    </tr>
+                </thead>
+                <tbody id="table">
+                    <tr id="inputEntityRow">
+                        <td>{{ form_row(form.userId) }}</td>
+                        <td>{{ form_row(form.permissionLevel) }}</td>
+                        <td>{{ form_row(form.creationDate) }}</td>
+                        <td oninput="updateDate();">{{ form_row(form.expirationDate) }}</td>
+                        <td><select id="user_active" disabled><option value="0">{{ yes }}</option><option value="1">{{ no }}</option></select></td>
+                        <td><img src="res/add.svg" title="{{ add|capitalize }}" onclick="addUser()" class="action"/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div></div><br/><br/>
+    
+        <form action="usersUpload" method="post" enctype="multipart/form-data">
+            <a href="usersDownload"><img src="res/download.svg" title="{{ download }}" id="entitiesDownload" class="downupload"/></a>
+            <input type="file" name="fileToUpload" oninput="uploadEntities()" hidden>
+            <img src="res/upload.svg" title="{{ upload }}" id="fileToUpload" onclick="document.getElementsByName('fileToUpload')[0].click();" class="downupload"/>
+            <input type="submit" value="upload" name="submit" id="uploadEntitiesButton" hidden>
+        </form>
+        </div></div>
+        </div>
+    </body>
 </html>
