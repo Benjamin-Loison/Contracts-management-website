@@ -3,7 +3,7 @@ This project, called "BOSE" for "Boîte à outils du système d'exploitation", i
 
 This website uses PhP 8 (+HTML/CSS/JavaScript (with a lot of AJAX)), Symfony 5 and SimpleSAMLPhP in order to provide a transparent connection to the website using ADFS.
 
-<!-- could add steps to precisely install ->
+<!-- could add steps to precisely install -->
 
 ![alt text](https://github.com/Benjamin-Loison/Contracts-management-website/raw/main/showcase/login.png)
 ![alt text](https://github.com/Benjamin-Loison/Contracts-management-website/raw/main/showcase/dashboard.png)
